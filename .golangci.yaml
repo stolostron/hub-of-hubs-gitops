@@ -1,0 +1,16 @@
+linters:
+  enable-all: true
+  disable:
+    - nlreturn
+    - exhaustivestruct
+    - godox
+    - ireturn
+
+linters-settings:
+  gomoddirectives:
+    replace-allow-list:
+      - k8s.io/client-go # Kuberentes client specific issue. See https://maelvls.dev/client-go-transitive-hell/.
+
+run:
+  skip-dirs:
+    - vendor
