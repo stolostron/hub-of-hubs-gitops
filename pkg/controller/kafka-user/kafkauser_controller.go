@@ -15,7 +15,7 @@ import (
 
 const (
 	logName        = "kafkauser-controller"
-	kafkaNamespace = "kafka-user"
+	kafkaNamespace = "kafka"
 )
 
 // AddKafkaUserController creates a new instance of KafkaUser controller and adds it to the manager.
