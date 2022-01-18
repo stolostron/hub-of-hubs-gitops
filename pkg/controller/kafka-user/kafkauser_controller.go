@@ -1,12 +1,11 @@
-package hub
+package kafkauser
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/go-logr/logr"
-	datatypes "github.com/open-cluster-management/hub-of-hubs-data-types"
-	hubv1 "github.com/open-cluster-management/hub-of-hubs-data-types/apis/config/v1"
+	"github.com/open-cluster-management/hub-of-hubs-kafka-transport/apis/strimzi-operator/kafka-user/v1beta2"
 	"github.com/stolostron/hub-of-hubs-hub-lifecycle-management/pkg/helpers"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -15,41 +14,42 @@ import (
 )
 
 const (
-	hubLogName = "hub-controller"
+	logName        = "kafkauser-controller"
+	kafkaNamespace = "kafka-user"
 )
 
-// AddHubController creates a new instance of hub-controller and adds it to the manager.
-func AddHubController(mgr ctrl.Manager) error {
-	hubCtrl := &hubController{
+// AddKafkaUserController creates a new instance of KafkaUser controller and adds it to the manager.
+func AddKafkaUserController(mgr ctrl.Manager) error {
+	kafkaUserCtrl := &kafkaUserController{
 		client: mgr.GetClient(),
-		log:    ctrl.Log.WithName(hubLogName),
+		log:    ctrl.Log.WithName(logName),
 	}
 
-	hohNamespacePredicate := predicate.NewPredicateFuncs(func(object client.Object) bool {
-		return object.GetNamespace() == datatypes.HohSystemNamespace
+	kafkaNamespacePredicate := predicate.NewPredicateFuncs(func(object client.Object) bool {
+		return object.GetNamespace() == kafkaNamespace
 	})
 
 	if err := ctrl.NewControllerManagedBy(mgr).
-		For(&hubv1.Hub{}).
-		WithEventFilter(hohNamespacePredicate).
-		Complete(hubCtrl); err != nil {
+		For(&v1beta2.KafkaUser{}).
+		WithEventFilter(kafkaNamespacePredicate).
+		Complete(kafkaUserCtrl); err != nil {
 		return fmt.Errorf("failed to add hub controller to the manager - %w", err)
 	}
 
 	return nil
 }
 
-type hubController struct {
+type kafkaUserController struct {
 	client client.Client
 	log    logr.Logger
 }
 
 // Reconcile reconciles Hub CR.
-func (c *hubController) Reconcile(ctx context.Context, request ctrl.Request) (ctrl.Result, error) {
+func (c *kafkaUserController) Reconcile(ctx context.Context, request ctrl.Request) (ctrl.Result, error) {
 	reqLogger := c.log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 
-	hub := &hubv1.Hub{}
-	if err := c.client.Get(ctx, request.NamespacedName, hub); apierrors.IsNotFound(err) {
+	kafkaUser := &v1beta2.KafkaUser{}
+	if err := c.client.Get(ctx, request.NamespacedName, kafkaUser); apierrors.IsNotFound(err) {
 		return ctrl.Result{}, nil
 	} else if err != nil {
 		reqLogger.Info(fmt.Sprintf("Reconciliation failed: %s", err))

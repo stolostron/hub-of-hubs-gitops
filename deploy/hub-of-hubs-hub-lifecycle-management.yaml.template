@@ -34,7 +34,6 @@ rules:
   - ""
   resources:
   - pods
-  - configmaps
   - events
   verbs:
   - create
@@ -53,6 +52,20 @@ rules:
   - create
   - update
   - delete
+- apiGroups:
+  - kafka.strimzi.io
+  resources:
+  - secrets
+  - kafkausers
+  - kafkatopics
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - watch
+  - patch
+  - update
 ---
 
 apiVersion: v1

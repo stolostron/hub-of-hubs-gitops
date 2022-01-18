@@ -7,6 +7,7 @@ require (
 	github.com/open-cluster-management/api v0.0.0-20210527013639-a6845f2ebcb1
 	github.com/open-cluster-management/hub-of-hubs-data-types v0.3.0
 	github.com/open-cluster-management/hub-of-hubs-data-types/apis/config v0.3.0
+	github.com/open-cluster-management/hub-of-hubs-kafka-transport/apis/strimzi-operator/kafka-user v0.0.0-20220118130508-b4b08e4b4130
 	github.com/operator-framework/operator-sdk v0.19.4
 	github.com/spf13/pflag v1.0.5
 	k8s.io/apimachinery v0.21.3
