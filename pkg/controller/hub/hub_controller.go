@@ -14,12 +14,12 @@ import (
 )
 
 const (
-	hubLogName = "hub-lifecycle-management-controller"
+	hubLogName = "hub-controller"
 )
 
-// AddHubController creates a new instance of hub controller and adds it to the manager.
+// AddHubController creates a new instance of hub-controller and adds it to the manager.
 func AddHubController(mgr ctrl.Manager) error {
-	hubOfHubsConfigCtrl := &hubOfHubsHubController{
+	hubCtrl := &hubController{
 		client: mgr.GetClient(),
 		log:    ctrl.Log.WithName(hubLogName),
 	}
@@ -31,20 +31,20 @@ func AddHubController(mgr ctrl.Manager) error {
 	if err := ctrl.NewControllerManagedBy(mgr).
 		For(&hubv1.Hub{}).
 		WithEventFilter(hohNamespacePredicate).
-		Complete(hubOfHubsConfigCtrl); err != nil {
+		Complete(hubCtrl); err != nil {
 		return fmt.Errorf("failed to add hub controller to the manager - %w", err)
 	}
 
 	return nil
 }
 
-type hubOfHubsHubController struct {
+type hubController struct {
 	client client.Client
 	log    logr.Logger
 }
 
 // Reconcile reconciles Hub CR.
-func (c *hubOfHubsHubController) Reconcile(ctx context.Context, request ctrl.Request) (ctrl.Result, error) {
+func (c *hubController) Reconcile(ctx context.Context, request ctrl.Request) (ctrl.Result, error) {
 	reqLogger := c.log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 
 	hub := &hubv1.Hub{}
