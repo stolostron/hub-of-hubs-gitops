@@ -1,1 +1,1 @@
-# hub-of-hubs-hub-lifecycle-management
+# hub-of-hubs-nonk8s-gitops
