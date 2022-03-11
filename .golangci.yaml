@@ -5,11 +5,13 @@ linters:
     - exhaustivestruct
     - godox
     - ireturn
+    - interfacer
 
 linters-settings:
   gomoddirectives:
     replace-allow-list:
       - k8s.io/client-go # Kuberentes client specific issue. See https://maelvls.dev/client-go-transitive-hell/.
+      - open-cluster-management.io/multicloud-operators-subscription
 
 run:
   skip-dirs:
