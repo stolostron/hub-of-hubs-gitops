@@ -40,6 +40,14 @@ rules:
   - create
   - update
   - delete
+- apiGroups:
+  - "apps.open-cluster-management.io"
+  resources:
+  - subscriptions
+  verbs:
+  - get
+  - list
+  - watch
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -48,9 +56,27 @@ metadata:
   namespace: open-cluster-management
 ---
 apiVersion: v1
+kind: Service
+metadata:
+  name: hub-of-hubs-nonk8s-gitops
+  namespace: open-cluster-management
+  labels:
+    app: hub-of-hubs-nonk8s-gitops
+    service: hub-of-hubs-nonk8s-gitops
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: hub-of-hubs-nonk8s-gitops-certs
+spec:
+  ports:
+  - port: 8080
+    name: http
+  selector:
+    name: hub-of-hubs-nonk8s-gitops
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: hub-of-hubs-nonk8s-gitops-ca-bundle
+  namespace: open-cluster-management
   annotations:
     service.beta.openshift.io/inject-cabundle: "true"
   labels:
@@ -75,6 +101,8 @@ spec:
       containers:
         - name: hub-of-hubs-nonk8s-gitops
           image: $IMAGE
+          securityContext:
+            privileged: true
           args:
             - '--zap-devel=true'
           imagePullPolicy: Always
@@ -89,6 +117,8 @@ spec:
                 fieldRef:
                  apiVersion: v1
                  fieldPath: metadata.namespace
+            - name: SUBSCRIPTION_GIT_STORAGE_DIR_PATH
+              value: /opt/hub-of-hubs-subscription-storage
             - name: AUTHORIZATION_URL
               value: https://hub-of-hubs-rbac.open-cluster-management.svc:8181
             - name: AUTHORIZATION_CA_BUNDLE_PATH
@@ -97,7 +127,12 @@ spec:
               value: /certs/tls.key
             - name: CERTIFICATE_PATH
               value: /certs/tls.crt
+            - name: SYNC_INTERVAL
+              value: 30s
           volumeMounts:
+            - readOnly: true
+              mountPath: /opt/hub-of-hubs-subscription-storage
+              name: hoh-gitops-pv
             - readOnly: true
               mountPath: /hub-of-hubs-rbac-ca
               name: hub-of-hubs-rbac-ca
@@ -105,9 +140,12 @@ spec:
               mountPath: /certs
               name: certs
       volumes:
+        - name: hoh-gitops-pv
+          persistentVolumeClaim:
+            claimName: hoh-gitops-pv-claim
         - name: hub-of-hubs-rbac-ca
           configMap:
-            name: hub-of-hubs-rbac-ca-bundle
+            name: hub-of-hubs-nonk8s-gitops-ca-bundle
         - name: certs
           secret:
             secretName: hub-of-hubs-nonk8s-gitops-certs
