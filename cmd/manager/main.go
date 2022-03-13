@@ -142,6 +142,10 @@ func createManager(leaderElectionNamespace string, gitStorageDirPath string, spe
 		return nil, fmt.Errorf("%w: %s", errEnvVarNotFound, envVarControllerNamespace)
 	}
 
+	if err := controller.AddToScheme(mgr.GetScheme()); err != nil {
+		return nil, fmt.Errorf("failed to add mgr: %w", err)
+	}
+
 	if err := controller.AddGitStorageWalker(mgr, gitStorageDirPath, specDB, authorizer, syncInterval); err != nil {
 		return nil, fmt.Errorf("failed to add db syncers: %w", err)
 	}

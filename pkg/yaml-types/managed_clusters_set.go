@@ -19,6 +19,8 @@ func NewManagedClustersSetFromBytes(data []byte) (*ManagedClustersSet, error) {
 
 // ManagedClustersSet implements the API for a ManagedClustersSet.
 type ManagedClustersSet struct {
+	// Kind is kind of yaml.
+	Kind string `yaml:"kind"`
 	// ManagedClustersSetMetadata is the metadata of a ManagedClusterSet.
 	Metadata ManagedClustersSetMetadata `yaml:"metadata"`
 	// ManagedClustersSetSpec is the spec of a ManagedClusterSet.
@@ -37,7 +39,7 @@ type ManagedClustersSetMetadata struct {
 // with the cluster set.
 type ManagedClustersSetSpec struct {
 	// Identifiers of the managed clusters.
-	Identifiers []HubIdentifier `yaml:"identifiers"`
+	Identifiers map[string]HubIdentifier `yaml:"identifiers"`
 }
 
 // HubIdentifier identifies managed clusters within a specific hub.

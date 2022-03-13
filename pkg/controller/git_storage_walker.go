@@ -102,8 +102,9 @@ func (walker *gitStorageWalker) syncGitRepos(ctx context.Context) bool {
 			continue // stray file
 		}
 
-		syncerTag, base64UserIdentity, base64UserGroup, err := walker.getInfoFromSubscription(ctx,
-			filepath.Base(gitRepo.Name()))
+		repoFullPath := filepath.Join(walker.rootDirPath, gitRepo.Name())
+
+		syncerTag, base64UserIdentity, base64UserGroup, err := walker.getInfoFromSubscription(ctx, gitRepo.Name())
 		if err != nil {
 			walker.log.Error(err, "failed to sync local git repo", "path", gitRepo.Name())
 			successRate--
@@ -120,7 +121,9 @@ func (walker *gitStorageWalker) syncGitRepos(ctx context.Context) bool {
 			continue
 		}
 
-		if dbSyncer.SyncGitRepo(ctx, base64UserIdentity, base64UserGroup, gitRepo.Name()) {
+		walker.log.Info("attempt sync repo", "syncer-tag", syncerTag, "path", repoFullPath)
+
+		if dbSyncer.SyncGitRepo(ctx, base64UserIdentity, base64UserGroup, repoFullPath) {
 			successRate++
 		}
 	}

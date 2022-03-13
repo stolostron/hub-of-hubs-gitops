@@ -9,19 +9,18 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"time"
 
 	set "github.com/deckarep/golang-set"
 	"github.com/go-logr/logr"
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/authorizer"
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/db"
 	yamltypes "github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/yaml-types"
-	"gopkg.in/src-d/go-git.v4"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 const (
 	managedClusterLabelsDBTableName = "managed_clusters_labels"
-	managedClustersSetKind          = "ManagedClustersSet"
 )
 
 // NewManagedClustersSetStorageToDBSyncer returns a new instance of ManagedClustersSetStorageToDBSyncer.
@@ -29,68 +28,62 @@ func NewManagedClustersSetStorageToDBSyncer(db db.SpecDB,
 	rbacAuthorizer authorizer.Authorizer,
 ) *ManagedClustersSetStorageToDBSyncer {
 	return &ManagedClustersSetStorageToDBSyncer{
-		log:                      ctrl.Log.WithName("managed-clusters-set-storage-to-db-syncer"),
-		db:                       db,
-		authorizer:               rbacAuthorizer,
-		dbTableName:              managedClusterLabelsDBTableName,
-		gitRepoToSyncedCommitMap: make(map[string]string),
+		log:                 ctrl.Log.WithName("managed-clusters-set-storage-to-db-syncer"),
+		db:                  db,
+		authorizer:          rbacAuthorizer,
+		dbTableName:         managedClusterLabelsDBTableName,
+		gitRepoToModTimeMap: make(map[string]time.Time),
 	}
 }
 
 // ManagedClustersSetStorageToDBSyncer handles syncing managed-clusters-set from git storage.
 type ManagedClustersSetStorageToDBSyncer struct {
-	log                      logr.Logger
-	db                       db.SpecDB
-	authorizer               authorizer.Authorizer
-	dbTableName              string
-	gitRepoToSyncedCommitMap map[string]string // TODO: map repo -> file -> synced hash
+	log                 logr.Logger
+	db                  db.SpecDB
+	authorizer          authorizer.Authorizer
+	dbTableName         string
+	gitRepoToModTimeMap map[string]time.Time // TODO: map repo -> file -> mod time
 }
 
 // SyncGitRepo operates on a local git repo to sync contained objects of managed-cluster-sets.
 func (syncer *ManagedClustersSetStorageToDBSyncer) SyncGitRepo(ctx context.Context, base64UserIdentity string,
-	base64UserGroup string, gitRepoPath string,
+	base64UserGroup string, gitRepoFullPath string,
 ) bool {
-	repo, err := git.PlainOpen(gitRepoPath)
+	dirInfo, err := os.Stat(gitRepoFullPath)
 	if err != nil {
-		syncer.log.Error(err, "failed to open local git repo", "path", gitRepoPath)
+		syncer.log.Error(err, "failed to stat git root", "root", gitRepoFullPath)
 		return false
 	}
 
-	ref, err := repo.Head()
-	if err != nil {
-		syncer.log.Error(err, "failed to get head of local git repo", "path", gitRepoPath)
-		return false
-	}
-
-	commit, err := repo.CommitObject(ref.Hash())
-	if err != nil {
-		syncer.log.Error(err, "failed to get latest commit of head of local git repo", "path", gitRepoPath)
-		return false
-	}
-
-	commitID := commit.ID().String()
-
-	if syncedCommit, found := syncer.gitRepoToSyncedCommitMap[gitRepoPath]; !found {
-		syncer.gitRepoToSyncedCommitMap[gitRepoPath] = ""
-	} else if syncedCommit == commitID {
+	if lastModTime, found := syncer.gitRepoToModTimeMap[gitRepoFullPath]; !found {
+		lastModTime = time.Time{}
+		syncer.gitRepoToModTimeMap[gitRepoFullPath] = lastModTime
+	} else if dirInfo.ModTime().Equal(lastModTime) {
 		return false // no updates
 	}
 
-	return syncer.walkGitRepo(ctx, base64UserIdentity, base64UserGroup, gitRepoPath)
+	if syncer.walkGitRepo(ctx, base64UserIdentity, base64UserGroup, gitRepoFullPath) { // all succeeded
+		syncer.gitRepoToModTimeMap[gitRepoFullPath] = dirInfo.ModTime()
+		syncer.log.Info("synced repo", "root", gitRepoFullPath, "mod-time", dirInfo.ModTime())
+
+		return true
+	}
+
+	return false // at least one failed
 }
 
 func (syncer *ManagedClustersSetStorageToDBSyncer) walkGitRepo(ctx context.Context, base64UserIdentity string,
-	base64UserGroup string, gitRepoPath string,
+	base64UserGroup string, gitRepoFullPath string,
 ) bool {
 	successRate := 0
 
-	_ = filepath.WalkDir(gitRepoPath, func(path string, dirEntry fs.DirEntry, err error) error {
+	_ = filepath.WalkDir(gitRepoFullPath, func(path string, dirEntry fs.DirEntry, err error) error {
 		if err != nil {
 			syncer.log.Error(err, "walkdir failed", "filepath", path)
 			return nil
 		}
 
-		if dirEntry.IsDir() {
+		if dirEntry.IsDir() || filepath.Dir(path) != gitRepoFullPath {
 			return nil // for now supporting first depth only
 		}
 
@@ -101,11 +94,6 @@ func (syncer *ManagedClustersSetStorageToDBSyncer) walkGitRepo(ctx context.Conte
 		if err != nil {
 			syncer.log.Error(err, "failed to open file in local git repo", "filepath", path)
 			return nil
-		}
-		// make sure kind is correct (reads first line only)
-		if kind, err := getGitYamlKind(file); err != nil || kind != managedClustersSetKind {
-			//nolint
-			return nil // irrelevant file
 		}
 
 		// buffer for file
@@ -139,17 +127,19 @@ func (syncer *ManagedClustersSetStorageToDBSyncer) walkGitRepo(ctx context.Conte
 func (syncer *ManagedClustersSetStorageToDBSyncer) syncManagedClustersSet(ctx context.Context, base64UserID string,
 	base64UserGroup string, managedClustersSet *yamltypes.ManagedClustersSet,
 ) error {
-	hubToManagedClustersMap := make(map[string]set.Set)
-	for _, hubIdentifier := range managedClustersSet.Spec.Identifiers {
-		hubToManagedClustersMap[hubIdentifier.Name] = createSetFromSlice(hubIdentifier.ManagedClusterIDs)
-	}
-
 	// get decoded identity - assuming correctness because annotated by operator
 	userID, _ := base64.StdEncoding.DecodeString(base64UserID)
 	userGroup, _ := base64.StdEncoding.DecodeString(base64UserGroup)
 
 	// get group label key
 	labelKey := fmt.Sprintf("%s/%s", managedClustersSet.Metadata.Group, managedClustersSet.Metadata.Name)
+
+	hubToManagedClustersMap := make(map[string]set.Set)
+	for _, hubIdentifier := range managedClustersSet.Spec.Identifiers {
+		hubToManagedClustersMap[hubIdentifier.Name] = createSetFromSlice(hubIdentifier.ManagedClusterIDs)
+		syncer.log.Info("found identifier in request", "user", userID, "group", userGroup,
+			"cluster", hubToManagedClustersMap[hubIdentifier.Name].String())
+	}
 
 	// get unauthorized managed clusters for subscribed user
 	unauthorizedHubToManagedClustersMap, err := syncer.authorizer.FilterManagedClustersForUser(ctx, string(userID),
@@ -160,12 +150,18 @@ func (syncer *ManagedClustersSetStorageToDBSyncer) syncManagedClustersSet(ctx co
 
 	if len(unauthorizedHubToManagedClustersMap) != 0 { // found unauthorized managed clusters in user request
 		for hubName, clustersSet := range unauthorizedHubToManagedClustersMap {
+			if len(clustersSet.ToSlice()) == 0 {
+				continue // means all good
+			}
+
 			syncer.log.Info("unauthorized entry found in request (removed)", "hub", hubName,
 				"clusters", clustersSet.String())
 
 			hubToManagedClustersMap[hubName] = hubToManagedClustersMap[hubName].Difference(clustersSet) // remove them
 		}
 	}
+
+	syncer.log.Info("updating managed cluster labels", "label", labelKey)
 
 	if err := syncer.db.UpdateManagedClustersSetLabel(ctx, managedClusterLabelsDBTableName, labelKey,
 		hubToManagedClustersMap); err != nil {
