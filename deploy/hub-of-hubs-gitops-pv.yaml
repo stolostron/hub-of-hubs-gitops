@@ -3,16 +3,23 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: hoh-gitops-pv
-  labels:
-    type: local
 spec:
   storageClassName: hoh-gitops
   capacity:
     storage: 10Gi
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
   hostPath:
     path: "/mnt/hub-of-hubs-subscription-storage"
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - ip-10-0-136-193
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -23,6 +30,6 @@ spec:
   storageClassName: hoh-gitops
   resources:
     requests:
-      storage: 7G
+      storage: 10G
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce

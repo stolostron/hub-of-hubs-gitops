@@ -9,13 +9,13 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"time"
 
 	set "github.com/deckarep/golang-set"
 	"github.com/go-logr/logr"
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/authorizer"
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/db"
 	yamltypes "github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/yaml-types"
+	"gopkg.in/src-d/go-git.v4"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
@@ -28,43 +28,55 @@ func NewManagedClustersSetStorageToDBSyncer(db db.SpecDB,
 	rbacAuthorizer authorizer.Authorizer,
 ) *ManagedClustersSetStorageToDBSyncer {
 	return &ManagedClustersSetStorageToDBSyncer{
-		log:                 ctrl.Log.WithName("managed-clusters-set-storage-to-db-syncer"),
-		db:                  db,
-		authorizer:          rbacAuthorizer,
-		dbTableName:         managedClusterLabelsDBTableName,
-		gitRepoToModTimeMap: make(map[string]time.Time),
+		log:                ctrl.Log.WithName("managed-clusters-set-storage-to-db-syncer"),
+		db:                 db,
+		authorizer:         rbacAuthorizer,
+		dbTableName:        managedClusterLabelsDBTableName,
+		gitRepoToCommitMap: make(map[string]string),
 	}
 }
 
 // ManagedClustersSetStorageToDBSyncer handles syncing managed-clusters-set from git storage.
 type ManagedClustersSetStorageToDBSyncer struct {
-	log                 logr.Logger
-	db                  db.SpecDB
-	authorizer          authorizer.Authorizer
-	dbTableName         string
-	gitRepoToModTimeMap map[string]time.Time // TODO: map repo -> file -> mod time
+	log                logr.Logger
+	db                 db.SpecDB
+	authorizer         authorizer.Authorizer
+	dbTableName        string
+	gitRepoToCommitMap map[string]string // TODO: map repo -> file -> mod time
 }
 
 // SyncGitRepo operates on a local git repo to sync contained objects of managed-cluster-sets.
 func (syncer *ManagedClustersSetStorageToDBSyncer) SyncGitRepo(ctx context.Context, base64UserIdentity string,
 	base64UserGroup string, gitRepoFullPath string,
 ) bool {
-	dirInfo, err := os.Stat(gitRepoFullPath)
+	repo, err := git.PlainOpen(gitRepoFullPath)
 	if err != nil {
-		syncer.log.Error(err, "failed to stat git root", "root", gitRepoFullPath)
+		syncer.log.Error(err, "failed to open local git repo", "root", gitRepoFullPath)
 		return false
 	}
 
-	if lastModTime, found := syncer.gitRepoToModTimeMap[gitRepoFullPath]; !found {
-		lastModTime = time.Time{}
-		syncer.gitRepoToModTimeMap[gitRepoFullPath] = lastModTime
-	} else if dirInfo.ModTime().Equal(lastModTime) {
+	ref, err := repo.Head()
+	if err != nil {
+		syncer.log.Error(err, "failed to open head of local git repo", "root", gitRepoFullPath)
+		return false
+	}
+
+	commit, err := repo.CommitObject(ref.Hash())
+	if err != nil {
+		syncer.log.Error(err, "failed to get commit of head", "root", gitRepoFullPath)
+		return false
+	}
+
+	if syncedCommit, found := syncer.gitRepoToCommitMap[gitRepoFullPath]; !found {
+		syncedCommit = ""
+		syncer.gitRepoToCommitMap[gitRepoFullPath] = syncedCommit
+	} else if syncedCommit == commit.ID().String() {
 		return false // no updates
 	}
 
 	if syncer.walkGitRepo(ctx, base64UserIdentity, base64UserGroup, gitRepoFullPath) { // all succeeded
-		syncer.gitRepoToModTimeMap[gitRepoFullPath] = dirInfo.ModTime()
-		syncer.log.Info("synced repo", "root", gitRepoFullPath, "mod-time", dirInfo.ModTime())
+		syncer.gitRepoToCommitMap[gitRepoFullPath] = commit.ID().String()
+		syncer.log.Info("synced repo", "root", gitRepoFullPath, "commit", commit.ID().String())
 
 		return true
 	}
