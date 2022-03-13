@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/go-logr/logr"
 	"github.com/jackc/pgx/v4/pgxpool"
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 const (
@@ -17,6 +19,7 @@ var errEnvVarNotFound = errors.New("not found environment variable")
 
 // PostgreSQL abstracts PostgreSQL client.
 type PostgreSQL struct {
+	log  logr.Logger
 	conn *pgxpool.Pool
 }
 
@@ -32,7 +35,10 @@ func NewPostgreSQL() (*PostgreSQL, error) {
 		return nil, fmt.Errorf("unable to connect to db: %w", err)
 	}
 
-	return &PostgreSQL{conn: dbConnectionPool}, nil
+	return &PostgreSQL{
+		log:  ctrl.Log.WithName("git-storage-walker"),
+		conn: dbConnectionPool,
+	}, nil
 }
 
 // Stop stops PostgreSQL and closes the connection pool.
