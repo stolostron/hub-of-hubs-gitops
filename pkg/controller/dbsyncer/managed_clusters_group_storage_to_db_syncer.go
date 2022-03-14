@@ -23,12 +23,12 @@ const (
 	managedClusterLabelsDBTableName = "managed_clusters_labels"
 )
 
-// NewManagedClustersSetStorageToDBSyncer returns a new instance of ManagedClustersSetStorageToDBSyncer.
-func NewManagedClustersSetStorageToDBSyncer(db db.SpecDB,
+// NewManagedClustersGroupStorageToDBSyncer returns a new instance of ManagedClustersGroupStorageToDBSyncer.
+func NewManagedClustersGroupStorageToDBSyncer(db db.SpecDB,
 	rbacAuthorizer authorizer.Authorizer,
-) *ManagedClustersSetStorageToDBSyncer {
-	return &ManagedClustersSetStorageToDBSyncer{
-		log:                ctrl.Log.WithName("managed-clusters-set-storage-to-db-syncer"),
+) *ManagedClustersGroupStorageToDBSyncer {
+	return &ManagedClustersGroupStorageToDBSyncer{
+		log:                ctrl.Log.WithName("managed-clusters-group-storage-to-db-syncer"),
 		db:                 db,
 		authorizer:         rbacAuthorizer,
 		dbTableName:        managedClusterLabelsDBTableName,
@@ -36,8 +36,8 @@ func NewManagedClustersSetStorageToDBSyncer(db db.SpecDB,
 	}
 }
 
-// ManagedClustersSetStorageToDBSyncer handles syncing managed-clusters-set from git storage.
-type ManagedClustersSetStorageToDBSyncer struct {
+// ManagedClustersGroupStorageToDBSyncer handles syncing managed-clusters-group from git storage.
+type ManagedClustersGroupStorageToDBSyncer struct {
 	log                logr.Logger
 	db                 db.SpecDB
 	authorizer         authorizer.Authorizer
@@ -45,8 +45,8 @@ type ManagedClustersSetStorageToDBSyncer struct {
 	gitRepoToCommitMap map[string]string // TODO: map repo -> file -> mod time
 }
 
-// SyncGitRepo operates on a local git repo to sync contained objects of managed-cluster-sets.
-func (syncer *ManagedClustersSetStorageToDBSyncer) SyncGitRepo(ctx context.Context, base64UserIdentity string,
+// SyncGitRepo operates on a local git repo to sync contained objects of managed-cluster-groups.
+func (syncer *ManagedClustersGroupStorageToDBSyncer) SyncGitRepo(ctx context.Context, base64UserIdentity string,
 	base64UserGroup string, gitRepoFullPath string,
 ) bool {
 	repo, err := git.PlainOpen(gitRepoFullPath)
@@ -84,7 +84,7 @@ func (syncer *ManagedClustersSetStorageToDBSyncer) SyncGitRepo(ctx context.Conte
 	return false // at least one failed
 }
 
-func (syncer *ManagedClustersSetStorageToDBSyncer) walkGitRepo(ctx context.Context, base64UserIdentity string,
+func (syncer *ManagedClustersGroupStorageToDBSyncer) walkGitRepo(ctx context.Context, base64UserIdentity string,
 	base64UserGroup string, gitRepoFullPath string,
 ) bool {
 	successRate := 0
@@ -116,15 +116,15 @@ func (syncer *ManagedClustersSetStorageToDBSyncer) walkGitRepo(ctx context.Conte
 			return nil
 		}
 
-		managedClustersSet, err := yamltypes.NewManagedClustersSetFromBytes(buf.Bytes())
+		managedClustersGroup, err := yamltypes.NewManagedClustersGroupFromBytes(buf.Bytes())
 		if err != nil {
-			syncer.log.Error(err, "failed to create managed clusters set", "filepath", path)
+			syncer.log.Error(err, "failed to create managed clusters group", "filepath", path)
 			return nil
 		}
 
-		if err := syncer.syncManagedClustersSet(ctx, base64UserIdentity, base64UserGroup,
-			managedClustersSet); err != nil {
-			syncer.log.Error(err, "failed to sync managed-clusters-set in local git repo", "filepath", path)
+		if err := syncer.syncManagedClustersGroup(ctx, base64UserIdentity, base64UserGroup,
+			managedClustersGroup); err != nil {
+			syncer.log.Error(err, "failed to sync managed-clusters-group in local git repo", "filepath", path)
 			return nil
 		}
 
@@ -136,21 +136,24 @@ func (syncer *ManagedClustersSetStorageToDBSyncer) walkGitRepo(ctx context.Conte
 	return successRate == 0 // all succeeded
 }
 
-func (syncer *ManagedClustersSetStorageToDBSyncer) syncManagedClustersSet(ctx context.Context, base64UserID string,
-	base64UserGroup string, managedClustersSet *yamltypes.ManagedClustersSet,
+func (syncer *ManagedClustersGroupStorageToDBSyncer) syncManagedClustersGroup(ctx context.Context, base64UserID string,
+	base64UserGroup string, managedClustersGroup *yamltypes.ManagedClustersGroup,
 ) error {
 	// get decoded identity - assuming correctness because annotated by operator
 	userID, _ := base64.StdEncoding.DecodeString(base64UserID)
 	userGroup, _ := base64.StdEncoding.DecodeString(base64UserGroup)
 
 	// get group label key
-	labelKey := fmt.Sprintf("%s/%s", managedClustersSet.Metadata.Group, managedClustersSet.Metadata.Name)
+	labelKey := fmt.Sprintf("%s/%s", managedClustersGroup.Metadata.Group, managedClustersGroup.Metadata.Name)
 
 	hubToManagedClustersMap := make(map[string]set.Set)
-	for _, hubIdentifier := range managedClustersSet.Spec.Identifiers {
-		hubToManagedClustersMap[hubIdentifier.Name] = createSetFromSlice(hubIdentifier.ManagedClusterIDs)
-		syncer.log.Info("found identifier in request", "user", userID, "group", userGroup,
-			"cluster", hubToManagedClustersMap[hubIdentifier.Name].String())
+
+	for _, identifier := range managedClustersGroup.Spec.Identifiers {
+		for _, hubIdentifier := range identifier {
+			hubToManagedClustersMap[hubIdentifier.Name] = createSetFromSlice(hubIdentifier.ManagedClusterIDs)
+			syncer.log.Info("found identifier in request", "user", userID, "group", userGroup,
+				"cluster", hubToManagedClustersMap[hubIdentifier.Name].String())
+		}
 	}
 
 	// get unauthorized managed clusters for subscribed user

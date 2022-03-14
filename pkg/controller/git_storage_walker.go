@@ -121,8 +121,6 @@ func (walker *gitStorageWalker) syncGitRepos(ctx context.Context) bool {
 			continue
 		}
 
-		walker.log.Info("attempt sync repo", "syncer-tag", syncerTag, "path", repoFullPath)
-
 		if dbSyncer.SyncGitRepo(ctx, base64UserIdentity, base64UserGroup, repoFullPath) {
 			successRate++
 		}

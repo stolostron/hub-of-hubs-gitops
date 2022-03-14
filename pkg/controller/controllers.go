@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const managedClustersSetStorageToDBSyncerTag = "ManagedClustersSet"
+const managedClustersSetStorageToDBSyncerTag = "ManagedClustersGroup"
 
 // AddToScheme adds all Resources to the Scheme.
 func AddToScheme(runtimeScheme *runtime.Scheme) error {
@@ -31,7 +31,8 @@ func AddGitStorageWalker(mgr ctrl.Manager, gitStorageDirPath string, specDB db.S
 	rbacAuthorizer authorizer.Authorizer, syncInterval time.Duration,
 ) error {
 	tagToSyncerMap := map[string]dbsyncer.StorageToDBSyncer{
-		managedClustersSetStorageToDBSyncerTag: dbsyncer.NewManagedClustersSetStorageToDBSyncer(specDB, rbacAuthorizer),
+		managedClustersSetStorageToDBSyncerTag: dbsyncer.NewManagedClustersGroupStorageToDBSyncer(specDB,
+			rbacAuthorizer),
 	}
 
 	k8sClient, err := client.New(mgr.GetConfig(), client.Options{Scheme: mgr.GetScheme()})

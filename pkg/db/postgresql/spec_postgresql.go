@@ -78,7 +78,7 @@ func (p *PostgreSQL) updateLabels(ctx context.Context, hubName string, cluster s
 	}
 	defer rows.Close()
 
-	labelsToAdd := map[string]string{labelKey: db.ManagedClusterSetTagValue}
+	labelsToAdd := map[string]string{labelKey: db.ManagedClusterSetDefaultTagValue}
 
 	if !rows.Next() { // insert the labels
 		_, err := p.conn.Exec(ctx,
@@ -107,7 +107,7 @@ func (p *PostgreSQL) updateLabels(ctx context.Context, hubName string, cluster s
 	labelsToRemove := map[string]struct{}{}
 
 	for key, value := range currentLabelsToAdd {
-		if value == db.ManagedClusterSetTagValue {
+		if value == db.ManagedClusterSetDefaultTagValue {
 			labelsToAdd[key] = value // label should be retained
 			continue
 		}

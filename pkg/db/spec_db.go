@@ -6,11 +6,18 @@ import (
 	set "github.com/deckarep/golang-set"
 )
 
-// ManagedClusterSetTagValue is the value used for labels that are of kind tag.
-const ManagedClusterSetTagValue = "hohMCSetTag"
+// ManagedClusterSetDefaultTagValue is the value used for labels that are of kind tag.
+const ManagedClusterSetDefaultTagValue = "true"
 
-// SpecDB is the needed interface for the db transport bridge.
+// SpecDB is the needed interface for nonk8s-gitops DB related functionality.
 type SpecDB interface {
+	ManagedClusterLabelsSpecDB
+	// Stop stops db and releases resources (e.g. connection pool).
+	Stop()
+}
+
+// ManagedClusterLabelsSpecDB is the interface needed by the spec transport bridge to sync managed-cluster labels table.
+type ManagedClusterLabelsSpecDB interface {
 	// UpdateManagedClustersSetLabel receives a map of hub -> set of managed clusters and updates their labels to be
 	// appended by the given group tag label.
 	//
@@ -19,4 +26,10 @@ type SpecDB interface {
 		hubToManagedClustersMap map[string]set.Set) error
 	// Stop stops db and releases resources (e.g. connection pool).
 	Stop()
+}
+
+// ManagedClusterLabelsState wraps the information that define a managed-cluster labels state.
+type ManagedClusterLabelsState struct {
+	LabelsMap        map[string]string
+	DeletedLabelKeys []string
 }
