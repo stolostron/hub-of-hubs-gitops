@@ -23,7 +23,7 @@ var errDidNotSyncAllEntries = errors.New("failed to sync all entries")
 //
 // If the operation fails, hubToManagedClustersMap will contain un-synced entries only.
 func (p *PostgreSQL) UpdateManagedClustersSetLabel(ctx context.Context, tableName string, labelKey string,
-	hubToManagedClustersMap map[string]set.Set,
+	labelValue string, hubToManagedClustersMap map[string]set.Set,
 ) error {
 	intervalPolicy := intervalpolicy.NewExponentialBackoffPolicy(retryInterval)
 	retryAttempts := optimisticConcurrencyRetriesCount
@@ -38,7 +38,7 @@ func (p *PostgreSQL) UpdateManagedClustersSetLabel(ctx context.Context, tableNam
 					continue
 				}
 
-				if err := p.updateLabels(ctx, hubName, clusterName, labelKey); err != nil {
+				if err := p.updateLabels(ctx, hubName, clusterName, labelKey, labelValue); err != nil {
 					p.log.Error(err, "failed to update labels for cluster", "hub", hubName, "cluster", clusterName,
 						"label", labelKey)
 					continue
@@ -69,7 +69,9 @@ func (p *PostgreSQL) UpdateManagedClustersSetLabel(ctx context.Context, tableNam
 	return nil
 }
 
-func (p *PostgreSQL) updateLabels(ctx context.Context, hubName string, cluster string, labelKey string) error {
+func (p *PostgreSQL) updateLabels(ctx context.Context, hubName string, cluster string, labelKey string,
+	labelValue string,
+) error {
 	rows, err := p.conn.Query(ctx,
 		"SELECT labels, deleted_label_keys, version from spec.managed_clusters_labels WHERE leaf_hub_name = $1 AND "+
 			"managed_cluster_name = $2", hubName, cluster)
@@ -78,7 +80,11 @@ func (p *PostgreSQL) updateLabels(ctx context.Context, hubName string, cluster s
 	}
 	defer rows.Close()
 
-	labelsToAdd := map[string]string{labelKey: db.ManagedClusterSetDefaultTagValue}
+	if labelValue == "" {
+		labelValue = db.ManagedClusterSetDefaultTagValue
+	}
+
+	labelsToAdd := map[string]string{labelKey: labelValue}
 
 	if !rows.Next() { // insert the labels
 		_, err := p.conn.Exec(ctx,
@@ -103,11 +109,11 @@ func (p *PostgreSQL) updateLabels(ctx context.Context, hubName string, cluster s
 		return fmt.Errorf("failed to scan a row: %w", err)
 	}
 
-	// every label that is not a hohTag should be dropped
+	// every label that is not prefixed by hohGroup should be dropped
 	labelsToRemove := map[string]struct{}{}
 
 	for key, value := range currentLabelsToAdd {
-		if value == db.ManagedClusterSetDefaultTagValue {
+		if len(key) >= len(db.HubOfHubsGroup) && key[:len(db.HubOfHubsGroup)] == db.HubOfHubsGroup {
 			labelsToAdd[key] = value // label should be retained
 			continue
 		}

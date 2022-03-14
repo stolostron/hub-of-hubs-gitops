@@ -6,8 +6,12 @@ import (
 	set "github.com/deckarep/golang-set"
 )
 
-// ManagedClusterSetDefaultTagValue is the value used for labels that are of kind tag.
-const ManagedClusterSetDefaultTagValue = "true"
+const (
+	// ManagedClusterSetDefaultTagValue is the value used for labels that are of kind tag.
+	ManagedClusterSetDefaultTagValue = "true"
+	// HubOfHubsGroup is the group name that prefixes hoh items.
+	HubOfHubsGroup = "hub-of-hubs.open-cluster-management.io"
+)
 
 // SpecDB is the needed interface for nonk8s-gitops DB related functionality.
 type SpecDB interface {
@@ -22,7 +26,7 @@ type ManagedClusterLabelsSpecDB interface {
 	// appended by the given group tag label.
 	//
 	// If the operation fails, hubToManagedClustersMap will contain un-synced entries only.
-	UpdateManagedClustersSetLabel(ctx context.Context, tableName string, labelKey string,
+	UpdateManagedClustersSetLabel(ctx context.Context, tableName string, labelKey string, labelValue string,
 		hubToManagedClustersMap map[string]set.Set) error
 	// Stop stops db and releases resources (e.g. connection pool).
 	Stop()

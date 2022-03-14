@@ -37,7 +37,7 @@ type ManagedClustersGroupMetadata struct {
 // with the cluster set.
 type ManagedClustersGroupSpec struct {
 	// TagValue is the value that will be assigned to the group label's key.
-	TagValue string `yaml:"tag-value"`
+	TagValue string `yaml:"tagValue"`
 	// Identifiers of the managed clusters.
 	Identifiers []map[string]HubIdentifier `yaml:"identifiers"`
 }

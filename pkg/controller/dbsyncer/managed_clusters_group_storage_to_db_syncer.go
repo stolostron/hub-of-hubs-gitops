@@ -21,7 +21,6 @@ import (
 
 const (
 	managedClusterLabelsDBTableName = "managed_clusters_labels"
-	hohGroup                        = "hub-of-hubs.open-cluster-management.io"
 )
 
 // NewManagedClustersGroupStorageToDBSyncer returns a new instance of ManagedClustersGroupStorageToDBSyncer.
@@ -145,7 +144,7 @@ func (syncer *ManagedClustersGroupStorageToDBSyncer) syncManagedClustersGroup(ct
 	userGroup, _ := base64.StdEncoding.DecodeString(base64UserGroup)
 
 	// get group label key
-	labelKey := fmt.Sprintf("%s/%s", hohGroup, managedClustersGroup.Metadata.Name)
+	labelKey := fmt.Sprintf("%s/%s", db.HubOfHubsGroup, managedClustersGroup.Metadata.Name)
 
 	hubToManagedClustersMap := make(map[string]set.Set)
 
@@ -180,7 +179,7 @@ func (syncer *ManagedClustersGroupStorageToDBSyncer) syncManagedClustersGroup(ct
 	syncer.log.Info("updating managed cluster labels", "label", labelKey)
 
 	if err := syncer.db.UpdateManagedClustersSetLabel(ctx, managedClusterLabelsDBTableName, labelKey,
-		hubToManagedClustersMap); err != nil {
+		managedClustersGroup.Spec.TagValue, hubToManagedClustersMap); err != nil {
 		return fmt.Errorf("failed to update managed clusters group - %w", err)
 	}
 
