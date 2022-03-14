@@ -1,17 +1,17 @@
 kind: ManagedClustersGroup # not a k8s resource, but the formatting is intentionally similar.
 metadata:
-  name: east-region-group # name of set
+  name: east-region-group # name of group
 spec:
   tagValue: 'true'
   identifiers: # can contain multiple hub-identifier entries
     - hubIdentifier:
-        name: hub4 # hub name
+        name: hub3 # hub name
         managedClusterIdentifiers: # currently, MCs are identified by name.
           - cluster5
           - cluster6
           - cluster7
     - hubIdentifier:
-        name: hub4 # hub name
-        managedClusterIdentifiers: # currently, MCs are identified by name.
+        name: hub4
+        managedClusterIdentifiers:
           - cluster9
   # identified MCs will be labeled with hub-of-hubs.open-cluster-management.io/{metadata.name}={spec.tagValue}
