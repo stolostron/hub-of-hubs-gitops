@@ -1,17 +1,17 @@
 [comment]: # ( Copyright Contributors to the Open Cluster Management project )
 
-# Hub-of-Hubs Status Transport Bridge
+# Hub-of-Hubs Non-K8s GitOps
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/stolostron/hub-of-hubs-nonk8s-gitops)](https://goreportcard.com/report/github.com/stolostron/hub-of-hubs-nonk8s-gitops))
-[![Go Reference](https://pkg.go.dev/badge/github.com/stolostron/hub-of-hubs-nonk8s-gitops).svg)](https://pkg.go.dev/github.com/stolostron/hub-of-hubs-nonk8s-gitops))
-[![License](https://img.shields.io/github/license/stolostron/hub-of-hubs-nonk8s-gitops))](/LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/stolostron/hub-of-hubs-nonk8s-gitops)](https://goreportcard.com/report/github.com/stolostron/hub-of-hubs-nonk8s-gitops)
+[![Go Reference](https://pkg.go.dev/badge/github.com/stolostron/hub-of-hubs-nonk8s-gitops)](https://pkg.go.dev/github.com/stolostron/hub-of-hubs-nonk8s-gitops)
+[![License](https://img.shields.io/github/license/stolostron/hub-of-hubs-nonk8s-gitops)](/LICENSE)
 
 The non-k8s GitOps component of [Hub-of-Hubs](https://github.com/stolostron/hub-of-hubs).
 
 Go to the [Contributing guide](CONTRIBUTING.md) to learn how to get involved.
 
 ## Overview
-[image here]
+![image](https://user-images.githubusercontent.com/73340153/158602131-29bed67e-8e7c-4bcc-8a8e-b46675472d9e.png)
 
 The Hub-of-Hubs non-k8s GitOps uses shares a volume (persistent storage) and a 
 [modified version](https://github.com/vMaroon/multicloud-operators-subscription) of the 
@@ -40,9 +40,7 @@ to that present in [standalone-subscriptions-operator-deployment.yaml](deploy/st
 
 
 ### Creating the namespace for accessible Subscription CRs
-    ```
     kubectl create namespace hoh-subscriptions
-    ```
 
 ### Visit [examples](examples) for example Subscription deployments / Git objects
 
