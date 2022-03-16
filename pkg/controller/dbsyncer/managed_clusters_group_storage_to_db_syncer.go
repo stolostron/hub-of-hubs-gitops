@@ -14,7 +14,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/authorizer"
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/db"
-	yamltypes "github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/yaml-types"
+	yamltypes "github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/types"
 	"gopkg.in/src-d/go-git.v4"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
