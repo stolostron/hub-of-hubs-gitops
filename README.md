@@ -13,7 +13,7 @@ Go to the [Contributing guide](CONTRIBUTING.md) to learn how to get involved.
 ## Overview
 ![image](https://user-images.githubusercontent.com/73340153/158602131-29bed67e-8e7c-4bcc-8a8e-b46675472d9e.png)
 
-The Hub-of-Hubs non-k8s GitOps uses shares a volume (persistent storage) and a 
+The Hub-of-Hubs non-k8s GitOps uses shares a volume (persistent storage) with a 
 [modified version](https://github.com/vMaroon/multicloud-operators-subscription) of the 
 [multicloud-operators-subscription](https://github.com/open-cluster-management-io/multicloud-operators-subscription) component,
 where the subscriptions-operator is responsible for syncing Git objects via the ACM Subscriptions mechanism, 
