@@ -19,6 +19,9 @@ The Hub-of-Hubs non-k8s GitOps uses shares a volume (persistent storage) with a
 where the subscriptions-operator is responsible for syncing Git objects via the ACM Subscriptions mechanism, 
 while the non-k8s GitOps component watches the files and processes them.
 
+Disclaimer: the component was implemented to demonstrate the mechanism. It is not tested for scale and can use 
+optimizations such as parallelized storage-walking / parallelized DB job handling.
+
 ## Prerequisites
 ### Deploying the Shared Volume
 1. Set the `NODE_HOSTNAME` to the hostname of the node (e.g., `ip-10-0-136-193`) that the storage, nonk8s-gitops and the 
@@ -45,6 +48,7 @@ to that present in [standalone-subscriptions-operator-deployment.yaml](deploy/cu
 The modified code has small modifications of the upstream stable release of the operator in [Open Cluster Management](https://github.com/open-cluster-management-io) organization,
 therefore it is forked to a [personal Git](https://github.com/vMaroon/multicloud-operators-subscription).
 
+TODO: automate deployment
 ### Creating the namespace for accessible Subscription CRs
     kubectl create namespace hoh-subscriptions
 
