@@ -35,9 +35,15 @@ that uses claims it to your hub of hubs cluster:
     
 ### Deploying the customized Subscriptions Operator
 
-The subscriptions operator deployment is managed by the [ACM for Kubernetes Operator](https://console-openshift-console.apps.mayoub-hoh2.scale.red-chesterfield.com/k8s/ns/open-cluster-management/operators.coreos.com~v1alpha1~ClusterServiceVersion/advanced-cluster-management.v2.4.2). To have the latter deploy the customized version, modify the "multicluster-operators-standalone-subscription" deployment 
-to that present in [standalone-subscriptions-operator-deployment.yaml](deploy/standalone-subscriptions-operator-deployment.yaml).
+#### Deploying the modified Subscription CRD
+    kubectl -n open-cluster-management apply -f deploy/customized-subscriptions-operator/apps.open-cluster-management.io_subscriptions_crd_v1.yaml
 
+#### Deploying the modified operator
+The subscriptions operator deployment is managed by the [ACM for Kubernetes Operator](https://console-openshift-console.apps.mayoub-hoh2.scale.red-chesterfield.com/k8s/ns/open-cluster-management/operators.coreos.com~v1alpha1~ClusterServiceVersion/advanced-cluster-management.v2.4.2). To have the latter deploy the customized version, modify the "multicluster-operators-standalone-subscription" deployment 
+to that present in [standalone-subscriptions-operator-deployment.yaml](deploy/customized-subscriptions-operator/standalone-subscriptions-operator-deployment.yaml).
+
+The modified code has small modifications of the upstream stable release of the operator in [Open Cluster Management](https://github.com/open-cluster-management-io) organization,
+therefore it is forked to a [personal Git](https://github.com/vMaroon/multicloud-operators-subscription).
 
 ### Creating the namespace for accessible Subscription CRs
     kubectl create namespace hoh-subscriptions

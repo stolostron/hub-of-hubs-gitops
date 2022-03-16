@@ -25,15 +25,7 @@ FROM go-env AS builder
 
 ARG COMPONENT
 WORKDIR /workspace/${COMPONENT}
-COPY go.mod go.mod
-COPY go.sum go.sum
-
-RUN go mod download
-
-COPY Makefile Makefile
-COPY cmd/ cmd/
-COPY pkg/ pkg/
-RUN make build
+COPY bin/${COMPONENT} bin/${COMPONENT}
 
 # Stage 2: Copy the binaries from the image builder to the base image
 FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
