@@ -152,7 +152,7 @@ func (syncer *ManagedClustersGroupStorageToDBSyncer) syncManagedClustersGroup(ct
 		for _, hubIdentifier := range identifier {
 			hubToManagedClustersMap[hubIdentifier.Name] = createSetFromSlice(hubIdentifier.ManagedClusterIDs)
 			syncer.log.Info("found identifier in request", "user", userID, "group", userGroup,
-				"cluster", hubToManagedClustersMap[hubIdentifier.Name].String())
+				"hub", hubIdentifier.Name, "clusters", hubToManagedClustersMap[hubIdentifier.Name].String())
 		}
 	}
 
@@ -173,10 +173,13 @@ func (syncer *ManagedClustersGroupStorageToDBSyncer) syncManagedClustersGroup(ct
 				"clusters", clustersSet.String())
 
 			hubToManagedClustersMap[hubName] = hubToManagedClustersMap[hubName].Difference(clustersSet) // remove them
+			if len(hubToManagedClustersMap[hubName].ToSlice()) == 0 {
+				delete(hubToManagedClustersMap, hubName)
+			}
 		}
 	}
 
-	syncer.log.Info("updating managed cluster labels", "label", labelKey)
+	syncer.log.Info("updating managed cluster labels", "label", labelKey, "value", managedClustersGroup.Spec.TagValue)
 
 	if err := syncer.db.UpdateManagedClustersSetLabel(ctx, managedClusterLabelsDBTableName, labelKey,
 		managedClustersGroup.Spec.TagValue, hubToManagedClustersMap); err != nil {
