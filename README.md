@@ -31,7 +31,7 @@ customized operator will run on:
     ```
 
 2. Run the following command to deploy the `hoh-gitops-pv` PersistentVolume and the `hoh-gitops-pv-claim` PersistentVolumeClaim 
-that uses claims it to your hub of hubs cluster:
+that claims it to your hub of hubs cluster:
     ```
     envsubst < deploy/hub-of-hubs-gitops-pv.yaml | kubectl apply -f -
     ```
@@ -76,14 +76,14 @@ TODO: automate deployment
 
 ## Deploy on the hub of hubs
 
-Set the `DATABASE_URL` according to the PostgreSQL URL format: `postgres://YourUserName:YourURLEscapedPassword@YourHostname:5432/YourDatabaseName?sslmode=verify-full&pool_max_conns=50`.
+1. If the `hub-of-hubs-database-transport-bridge-secret` does not exist:
+   1. Set the `DATABASE_URL` according to the PostgreSQL URL format: `postgres://YourUserName:YourURLEscapedPassword@YourHostname:5432/YourDatabaseName?sslmode=verify-full&pool_max_conns=50`.
+   Remember to URL-escape the password, you can do it in bash:
+      ```
+      python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1])" 'YourPassword'
+      ```
 
-Remember to URL-escape the password, you can do it in bash:
-
-    python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1])" 'YourPassword'
-
-
-1.  Create a secret with your database url:
+   1. Create a secret with your database url:
 
     ```
     kubectl create secret generic hub-of-hubs-database-transport-bridge-secret -n open-cluster-management --from-literal=url=$DATABASE_URL
