@@ -2,6 +2,792 @@ spec:
   install:
     spec:
       deployments:
+        - name: multiclusterhub-operator
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                name: multiclusterhub-operator
+            strategy: { }
+            template:
+              metadata:
+                creationTimestamp: null
+                labels:
+                  name: multiclusterhub-operator
+              spec:
+                containers:
+                  - args:
+                      - '--leader-elect'
+                    command:
+                      - multiclusterhub-operator
+                    env:
+                      - name: MANIFESTS_PATH
+                        value: /image-manifests
+                      - name: CRDS_PATH
+                        value: /crds
+                      - name: TEMPLATES_PATH
+                        value: /usr/local/templates
+                      - name: POD_NAMESPACE
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.namespace
+                      - name: OPERAND_IMAGE_APPLICATION_UI
+                        value: >-
+                          registry.redhat.io/rhacm2/application-ui-rhel8@sha256:3148568d78f2e62d0f09f11aaf0a8787fae8b845c1ac38141e7ebb9af86fd6f7
+                      - name: OPERAND_IMAGE_ASSISTED_IMAGE_SERVICE
+                        value: >-
+                          registry.redhat.io/rhacm2/assisted-image-service-rhel8@sha256:9768e9a73324561133f159ca6a2397e6a31de28abdc47be5b5fae444aeab20e3
+                      - name: OPERAND_IMAGE_ASSISTED_INSTALLER
+                        value: >-
+                          registry.redhat.io/rhacm2/assisted-installer-rhel8@sha256:ff003dde920f7ea53ae4578655e26ba6dc58a7ea42e65bac4124bfb415505f8e
+                      - name: OPERAND_IMAGE_ASSISTED_INSTALLER_AGENT
+                        value: >-
+                          registry.redhat.io/rhacm2/assisted-installer-agent-rhel8@sha256:2b6139743524958dde64cf7282da4ae7a73ef856994733b1fd3d9c58e1a5b6d6
+                      - name: OPERAND_IMAGE_ASSISTED_INSTALLER_CONTROLLER
+                        value: >-
+                          registry.redhat.io/rhacm2/assisted-installer-reporter-rhel8@sha256:edb0fd9241f936ad88fc8f91f97a46b8ebfd4a6b80c99a84cfd03479c2cd925a
+                      - name: OPERAND_IMAGE_ASSISTED_SERVICE
+                        value: >-
+                          registry.redhat.io/rhacm2/agent-service-rhel8@sha256:062fd54bf191013186dd03cdde0a87eaa884587ac38028dbdb050cb9c6d80389
+                      - name: OPERAND_IMAGE_CERT_POLICY_CONTROLLER
+                        value: >-
+                          registry.redhat.io/rhacm2/cert-policy-controller-rhel8@sha256:36b6a0c47c4a718182aba82ea4109da1deb69400e1abb1e924d5a1b418e63bab
+                      - name: OPERAND_IMAGE_CLUSTER_BACKUP_CONTROLLER
+                        value: >-
+                          registry.redhat.io/rhacm2/cluster-backup-rhel8-operator@sha256:9e607ccd420b89ffbc6b461e57a031166e457434f6de57a9a46aa6364e397552
+                      - name: OPERAND_IMAGE_CLUSTER_CURATOR_CONTROLLER
+                        value: >-
+                          registry.redhat.io/rhacm2/cluster-curator-controller-rhel8@sha256:dc8ca7d52d1615f25c7a28afcc967984517181963759a075a54db7291eb4cbdf
+                      - name: OPERAND_IMAGE_CLUSTER_PROXY_ADDON
+                        value: >-
+                          registry.redhat.io/rhacm2/cluster-proxy-addon-rhel8@sha256:4b9c3cdf7dc7b176ddacaf9c63f771488439f25e449cdd3cfbdbbbe607969456
+                      - name: OPERAND_IMAGE_CLUSTERCLAIMS_CONTROLLER
+                        value: >-
+                          registry.redhat.io/rhacm2/clusterclaims-controller-rhel8@sha256:b94bfc5011ec0c606bdb7326834e76cbd63ee68a54816e46b3248b00264718e5
+                      - name: OPERAND_IMAGE_CLUSTERLIFECYCLE_STATE_METRICS
+                        value: >-
+                          registry.redhat.io/rhacm2/clusterlifecycle-state-metrics-rhel8@sha256:9b4907dd0cd71ffc17229a0daa3f91e1469edd4b5f1a9f5e72b57d831f673f79
+                      - name: OPERAND_IMAGE_CONFIG_POLICY_CONTROLLER
+                        value: >-
+                          registry.redhat.io/rhacm2/config-policy-controller-rhel8@sha256:3f905e003324093fcf9bfdd44793b0ae5add9c9a513a70061aaae735806bac06
+                      - name: OPERAND_IMAGE_CONSOLE
+                        value: >-
+                          registry.redhat.io/rhacm2/console-rhel8@sha256:42103861df9667f4232735c4d3c16c6361fa01e2499b614bcb2d8e6939fa7669
+                      - name: OPERAND_IMAGE_CONSOLE_API
+                        value: >-
+                          registry.redhat.io/rhacm2/console-api-rhel8@sha256:f83decab8cc02eb9c2fc31d5d82397c7c049b3b036d7a871360fa353b3c7bb5c
+                      - name: OPERAND_IMAGE_DISCOVERY_OPERATOR
+                        value: >-
+                          registry.redhat.io/rhacm2/discovery-rhel8-operator@sha256:bf8db68bae4171a1b05f2a92d5fea89e077de42dbf1bb1a6041e69661c7718de
+                      - name: OPERAND_IMAGE_ENDPOINT_MONITORING_OPERATOR
+                        value: >-
+                          registry.redhat.io/rhacm2/endpoint-monitoring-rhel8-operator@sha256:496a8aac32b619b8caa4f78caa57b26141590eff452a1229d505e51da87c64ca
+                      - name: OPERAND_IMAGE_GOVERNANCE_POLICY_PROPAGATOR
+                        value: >-
+                          registry.redhat.io/rhacm2/governance-policy-propagator-rhel8@sha256:037261ea205d021acf5be2d0154f7baf027e5787d4130b0d9c2c02037ca18517
+                      - name: OPERAND_IMAGE_GOVERNANCE_POLICY_SPEC_SYNC
+                        value: >-
+                          registry.redhat.io/rhacm2/governance-policy-spec-sync-rhel8@sha256:0a3f3393cadb52cb595942b7f0d206e00dca06caa91daabbfbae41536e300a37
+                      - name: OPERAND_IMAGE_GOVERNANCE_POLICY_STATUS_SYNC
+                        value: >-
+                          registry.redhat.io/rhacm2/governance-policy-status-sync-rhel8@sha256:9dbd2e7cb2f2a1657e29d1c49ac86b40af82b81f2ec39e260881d3fb4b72efa3
+                      - name: OPERAND_IMAGE_GOVERNANCE_POLICY_TEMPLATE_SYNC
+                        value: >-
+                          registry.redhat.io/rhacm2/governance-policy-template-sync-rhel8@sha256:a5a36f9279a492948ac8ea6c57c466992f7fabde81744575c74cec81dbf1b841
+                      - name: OPERAND_IMAGE_GRAFANA
+                        value: >-
+                          registry.redhat.io/rhacm2/acm-grafana-rhel8@sha256:ddd190e8cd6cfb5a929e1ce6dd95482307975ff0a4216a519d300357622cd0c9
+                      - name: OPERAND_IMAGE_GRAFANA_DASHBOARD_LOADER
+                        value: >-
+                          registry.redhat.io/rhacm2/grafana-dashboard-loader-rhel8@sha256:9eda8791963c7cb4180c0474c4aaf62117ec207a76f79174bdaed7c3cf5810b8
+                      - name: OPERAND_IMAGE_GRC_UI
+                        value: >-
+                          registry.redhat.io/rhacm2/grc-ui-rhel8@sha256:2522cd150c3cc6413b5b6d8e56fdd9bee962ce0c9deefbb1030c0a70e2e3a64c
+                      - name: OPERAND_IMAGE_GRC_UI_API
+                        value: >-
+                          registry.redhat.io/rhacm2/grc-ui-api-rhel8@sha256:ef4c83a3df8931e54b368cd1d4a2466f6e355e617d7b738905d9a73401a8aedb
+                      - name: OPERAND_IMAGE_IAM_POLICY_CONTROLLER
+                        value: >-
+                          registry.redhat.io/rhacm2/iam-policy-controller-rhel8@sha256:0ddefa28f2068029389af09f563e1465cc38e3677c18953a1c79999aa6fd2f67
+                      - name: OPERAND_IMAGE_INSIGHTS_CLIENT
+                        value: >-
+                          registry.redhat.io/rhacm2/insights-client-rhel8@sha256:bd9199e108308856931595a56a261cf59f3147eab2d711fa5826f13f82e2656c
+                      - name: OPERAND_IMAGE_INSIGHTS_METRICS
+                        value: >-
+                          registry.redhat.io/rhacm2/insights-metrics-rhel8@sha256:a1ffd288f13009665060bf0ba28b6b6c27cc5e065fb12b744cabe45167c54f86
+                      - name: OPERAND_IMAGE_KLUSTERLET_ADDON_CONTROLLER
+                        value: >-
+                          registry.redhat.io/rhacm2/klusterlet-addon-controller-rhel8@sha256:0908f20d4058730e26ad173ffbe35565a2301e771e6f65a69045b0ab5cc80397
+                      - name: OPERAND_IMAGE_KLUSTERLET_ADDON_OPERATOR
+                        value: >-
+                          registry.redhat.io/rhacm2/klusterlet-addon-rhel8-operator@sha256:ad0f478a0c6261aaba0564df0284f8ffed3c8d1cc7506bc8c8f4dc85ff56c218
+                      - name: OPERAND_IMAGE_KUBE_RBAC_PROXY
+                        value: >-
+                          registry.redhat.io/rhacm2/kube-rbac-proxy-rhel8@sha256:24754264c4ebe1fca0483d15ffd22d125f1eba8aeb1964bb541afec9d5cf3077
+                      - name: OPERAND_IMAGE_KUBE_STATE_METRICS
+                        value: >-
+                          registry.redhat.io/rhacm2/kube-state-metrics-rhel8@sha256:68287ce639115f670b1d3b819be928c6c50ed1c57cb43ed4caebb263d53e1fc7
+                      - name: OPERAND_IMAGE_MANAGEDCLUSTER_IMPORT_CONTROLLER
+                        value: >-
+                          registry.redhat.io/rhacm2/managedcluster-import-controller-rhel8@sha256:b6c98dff8ba73ee9a39dc60487773c973ebc0e0e29114a2186868a7390b34731
+                      - name: OPERAND_IMAGE_MANAGEMENT_INGRESS
+                        value: >-
+                          registry.redhat.io/rhacm2/management-ingress-rhel8@sha256:5e4fbbbdc2dcb8dc6b634c926162d788b4d6055472f36ba3331327cbf3ae6673
+                      - name: OPERAND_IMAGE_MEMCACHED
+                        value: >-
+                          registry.redhat.io/rhacm2/memcached-rhel8@sha256:bebf6b0e9a10ca96b97a51aa238b828a87844973e6de7b31aa4c9e5e4758c528
+                      - name: OPERAND_IMAGE_MEMCACHED_EXPORTER
+                        value: >-
+                          registry.redhat.io/rhacm2/memcached-exporter-rhel8@sha256:6076ca540dfd6fb390949c9a65c3e53072c059eb2c121a127feec56cb40544cc
+                      - name: OPERAND_IMAGE_METRICS_COLLECTOR
+                        value: >-
+                          registry.redhat.io/rhacm2/metrics-collector-rhel8@sha256:cfb5317ebfa4aa8d4d3529fa1880507d68fd454b1f670df34d85905fdfd11419
+                      - name: OPERAND_IMAGE_MULTICLOUD_INTEGRATIONS
+                        value: >-
+                          registry.redhat.io/rhacm2/multicloud-integrations-rhel8@sha256:8e954521e6dd404dc2e4a10c2cd651349cef300912ec6c4853b08ff4d210923b
+                      - name: OPERAND_IMAGE_MULTICLOUD_MANAGER
+                        value: >-
+                          registry.redhat.io/rhacm2/multicloud-manager-rhel8@sha256:7c99dcee0ec1914b020bf544399cf6a6ed0b6e2c59a9a602728e43850c7fa993
+                      - name: OPERAND_IMAGE_MULTICLUSTER_OBSERVABILITY_OPERATOR
+                        value: >-
+                          registry.redhat.io/rhacm2/multicluster-observability-rhel8-operator@sha256:fd283e7f19b6932a1401035583640e2391cae8558cc09242d81b90062eb3a057
+                      - name: OPERAND_IMAGE_MULTICLUSTER_OPERATORS_APPLICATION
+                        value: >-
+                          registry.redhat.io/rhacm2/multicluster-operators-application-rhel8@sha256:d8d06c93f432aebf84eea56d390aaa440f121a44caf28a116092fd7ddcc5c291
+                      - name: OPERAND_IMAGE_MULTICLUSTER_OPERATORS_CHANNEL
+                        value: >-
+                          registry.redhat.io/rhacm2/multicluster-operators-channel-rhel8@sha256:de2633312587ab92e7ce19dd581809de694aac0d8504d4c8e57a32a760edbecc
+                      - name: OPERAND_IMAGE_MULTICLUSTER_OPERATORS_DEPLOYABLE
+                        value: >-
+                          registry.redhat.io/rhacm2/multicluster-operators-deployable-rhel8@sha256:d5ab1749ae3ffc648dfd8590f909c34225040156aa763b20e5f9d6c5e84907b4
+                      - name: OPERAND_IMAGE_MULTICLUSTER_OPERATORS_PLACEMENTRULE
+                        value: >-
+                          registry.redhat.io/rhacm2/multicluster-operators-placementrule-rhel8@sha256:bdc06c6b9bcd1b872c15e6bab87b5abbbb5a5f7f68bba8d5f0c5d91f670f5f19
+                      - name: OPERAND_IMAGE_MULTICLUSTER_OPERATORS_SUBSCRIPTION
+                        value: >-
+                          registry.redhat.io/rhacm2/multicluster-operators-subscription-rhel8@sha256:ed8f5f976aa63d8a1d572ab3ebef8fcda7fce2bf42eb737a7e3617efdc966f1c
+                      - name: >-
+                          OPERAND_IMAGE_MULTICLUSTER_OPERATORS_SUBSCRIPTION_RELEASE
+                        value: >-
+                          registry.redhat.io/rhacm2/multicluster-operators-subscription-release-rhel8@sha256:3e55d16da7a22c4fc43886d53aaa2bec40fcebbdac13f6c6c12531376a9358bf
+                      - name: OPERAND_IMAGE_MULTICLUSTERHUB_REPO
+                        value: >-
+                          registry.redhat.io/rhacm2/multiclusterhub-repo-rhel8@sha256:0ff7babd69669a4dd2861ac1a9837987ee1efec35df16b21953b6c4ed8cd34b5
+                      - name: OPERAND_IMAGE_NODE_EXPORTER
+                        value: >-
+                          registry.redhat.io/rhacm2/node-exporter-rhel8@sha256:d5cf904e04c65b4afea52a80513aa06dae07e659a7c5a14e6e5dea8b0809b918
+                      - name: OPERAND_IMAGE_OBSERVATORIUM
+                        value: >-
+                          registry.redhat.io/rhacm2/observatorium-rhel8@sha256:3632356824d12a573dd01964f5637348cf3645da4e4072d0faf11e342196bb69
+                      - name: OPERAND_IMAGE_OBSERVATORIUM_OPERATOR
+                        value: >-
+                          registry.redhat.io/rhacm2/observatorium-rhel8-operator@sha256:005f9dbeea7e9ef219660183383843aa7a31ba3f717560de1c56da8dce0de114
+                      - name: OPERAND_IMAGE_OPENSHIFT_HIVE
+                        value: >-
+                          registry.redhat.io/rhacm2/openshift-hive-rhel8@sha256:545801be0c283b9e0cd056c59404a0a68a21e9fdb0ec635cdf2118e38b2363ce
+                      - name: OPERAND_IMAGE_PLACEMENT
+                        value: >-
+                          registry.redhat.io/rhacm2/placement-rhel8@sha256:32c447c61ff4f7759adf38f090898fc4610bdb7cc8c16994afb9d690365dfc62
+                      - name: OPERAND_IMAGE_PROMETHEUS
+                        value: >-
+                          registry.redhat.io/rhacm2/prometheus-rhel8@sha256:ecbd0546b1294a5e2565ff914208835ec08bc0aeb6c7b28025d658a42dead4bf
+                      - name: OPERAND_IMAGE_PROMETHEUS_ALERTMANAGER
+                        value: >-
+                          registry.redhat.io/rhacm2/prometheus-alertmanager-rhel8@sha256:c07b95ad3cddab0795309f5fa998c54ce21e69533fdc6a7db6eca943dd94fa99
+                      - name: OPERAND_IMAGE_PROVIDER_CREDENTIAL_CONTROLLER
+                        value: >-
+                          registry.redhat.io/rhacm2/provider-credential-controller-rhel8@sha256:c823c207c9675d3d6332a3ca7dd73b81200bdd7025894d7b69cbf24695f1f916
+                      - name: OPERAND_IMAGE_RBAC_QUERY_PROXY
+                        value: >-
+                          registry.redhat.io/rhacm2/rbac-query-proxy-rhel8@sha256:e1eda90d053510f0da339d825a189511cfa8b94133c4f89c2a9f8a6b3efcc044
+                      - name: OPERAND_IMAGE_REDISGRAPH_TLS
+                        value: >-
+                          registry.redhat.io/rhacm2/redisgraph-tls-rhel8@sha256:41c6227b984856567ce8acd07bd7c5734e49931aade92a0407494b96e026d751
+                      - name: OPERAND_IMAGE_REGISTRATION
+                        value: >-
+                          registry.redhat.io/rhacm2/registration-rhel8@sha256:574b41e19bf26043f985fcfac8e8cd9384f1b37aba4d4eb3be3901ae6a427081
+                      - name: OPERAND_IMAGE_REGISTRATION_OPERATOR
+                        value: >-
+                          registry.redhat.io/rhacm2/registration-rhel8-operator@sha256:568d3b5dc4da1dd35c68d1405c274933d6129462b5873e929e25a444c50f1d6b
+                      - name: OPERAND_IMAGE_SEARCH_AGGREGATOR
+                        value: >-
+                          registry.redhat.io/rhacm2/search-aggregator-rhel8@sha256:423e846e4b81f2d0fb7bc8f7e2aeaaa30a3e78ef42e7bd8406145678704a7639
+                      - name: OPERAND_IMAGE_SEARCH_API
+                        value: >-
+                          registry.redhat.io/rhacm2/search-api-rhel8@sha256:623281445ffba2f86d4d2708e9aaa84b566a461e9bf29f703589cdb27492dcd3
+                      - name: OPERAND_IMAGE_SEARCH_COLLECTOR
+                        value: >-
+                          registry.redhat.io/rhacm2/search-collector-rhel8@sha256:9fa70dbf4485814c09600f40db908638ff6a647c4e06d1f42ee233a5669fb7a5
+                      - name: OPERAND_IMAGE_SEARCH_OPERATOR
+                        value: >-
+                          registry.redhat.io/rhacm2/search-rhel8@sha256:1b1cb5a338bc58e234e800ff5687c894cfbb60847e9c445b823de3bb25222f63
+                      - name: OPERAND_IMAGE_SEARCH_UI
+                        value: >-
+                          registry.redhat.io/rhacm2/search-ui-rhel8@sha256:71dac5b8869626dc203a756b19bc5a3eff8ad9cab0eb57b865248547d91748b5
+                      - name: OPERAND_IMAGE_SUBMARINER_ADDON
+                        value: >-
+                          registry.redhat.io/rhacm2/submariner-addon-rhel8@sha256:f70e7311ed83ac5042e976cb3d7a7eab546e2121c42437f1e1042b9305b7fc9a
+                      - name: OPERAND_IMAGE_THANOS
+                        value: >-
+                          registry.redhat.io/rhacm2/thanos-rhel8@sha256:66f68036df67547292fc0445304c84c10cb858249af1e1749b3008f4d32f42bc
+                      - name: OPERAND_IMAGE_THANOS_RECEIVE_CONTROLLER
+                        value: >-
+                          registry.redhat.io/rhacm2/thanos-receive-controller-rhel8@sha256:2858990232985999da589c565bc6deb5572dc8caf289e609652467fc40aad564
+                      - name: OPERAND_IMAGE_VOLSYNC
+                        value: >-
+                          registry.redhat.io/rhacm2/volsync-rhel8@sha256:3c524582d4f9a1666de8b38daaaf70d33b177e0f8c6668e13cd21a24283aebaf
+                      - name: OPERAND_IMAGE_VOLSYNC_MOVER_RCLONE
+                        value: >-
+                          registry.redhat.io/rhacm2/volsync-mover-rclone-rhel8@sha256:7344683a57d37081d4d55a65cd93a949e3e7cd213ca2338a0708c3678042176c
+                      - name: OPERAND_IMAGE_VOLSYNC_MOVER_RESTIC
+                        value: >-
+                          registry.redhat.io/rhacm2/volsync-mover-restic-rhel8@sha256:f9f72c430316e7b1a2e94e5f7d617423abe6f9c3180d3644686fe946fb726bea
+                      - name: OPERAND_IMAGE_VOLSYNC_MOVER_RSYNC
+                        value: >-
+                          registry.redhat.io/rhacm2/volsync-mover-rsync-rhel8@sha256:b918fca60a1e5a95e8186e4b4a758acff335611a3028f24ca22e479dc72dee18
+                      - name: OPERAND_IMAGE_WORK
+                        value: >-
+                          registry.redhat.io/rhacm2/work-rhel8@sha256:b5c1519fda361b17f90ce895de2587d0b95692660fb79988ca2f21f71267ebe1
+                      - name: OPERAND_IMAGE_ACM_MUST_GATHER
+                        value: >-
+                          registry.redhat.io/rhacm2/acm-must-gather-rhel8@sha256:f57f319a1c51b476440ee10e452f1c9ed500812f0b2e9dbaf0c4c146baad86f8
+                      - name: OPERAND_IMAGE_MULTICLUSTERHUB_OPERATOR
+                        value: >-
+                          registry.redhat.io/rhacm2/multiclusterhub-rhel8@sha256:3908cd13e9ecb8d3d06e32caa657275bcf9a7625ee901d0fb923f23b8ad0fe7b
+                      - name: OPERAND_IMAGE_OAUTH_PROXY
+                        value: >-
+                          registry.redhat.io/openshift4/ose-oauth-proxy@sha256:2fe11e0fabd878f53a2627ebbed273400e063cffd80d8817565163dcbdaabcf7
+                      - name: OPERAND_IMAGE_POSTGRESQL_12
+                        value: >-
+                          registry.redhat.io/rhel8/postgresql-12@sha256:952ac9a625c7600449f0ab1970fae0a86c8a547f785e0f33bfae4365ece06336
+                      - name: OPERAND_IMAGE_PROMETHEUS-ALERTMANAGER
+                        value: >-
+                          registry.redhat.io/openshift4/ose-prometheus-alertmanager@sha256:88e34930a9e7c766b5b280388e960a14f2803eab4604e8c9ec785ee14493d2c9
+                      - name: OPERAND_IMAGE_PROMETHEUS-CONFIG-RELOADER
+                        value: >-
+                          registry.redhat.io/openshift4/ose-configmap-reloader@sha256:ca6df8d39998275a1b42c761df0379911025386ca4130c1801d83f4141ee3576
+                    image: >-
+                      registry.redhat.io/rhacm2/multiclusterhub-rhel8@sha256:3908cd13e9ecb8d3d06e32caa657275bcf9a7625ee901d0fb923f23b8ad0fe7b
+                    livenessProbe:
+                      httpGet:
+                        path: /healthz
+                        port: 8081
+                      initialDelaySeconds: 15
+                      periodSeconds: 20
+                    name: multiclusterhub-operator
+                    readinessProbe:
+                      httpGet:
+                        path: /readyz
+                        port: 8081
+                      initialDelaySeconds: 5
+                      periodSeconds: 10
+                    resources:
+                      limits:
+                        cpu: 100m
+                        memory: 2Gi
+                      requests:
+                        cpu: 100m
+                        memory: 256Mi
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                securityContext:
+                  runAsNonRoot: true
+                serviceAccountName: multiclusterhub-operator
+                terminationGracePeriodSeconds: 10
+        - name: cluster-manager
+          spec:
+            replicas: 3
+            selector:
+              matchLabels:
+                app: cluster-manager
+            strategy: { }
+            template:
+              metadata:
+                creationTimestamp: null
+                labels:
+                  app: cluster-manager
+              spec:
+                affinity:
+                  podAntiAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                      - podAffinityTerm:
+                          labelSelector:
+                            matchExpressions:
+                              - key: app
+                                operator: In
+                                values:
+                                  - cluster-manager
+                          topologyKey: failure-domain.beta.kubernetes.io/zone
+                        weight: 70
+                      - podAffinityTerm:
+                          labelSelector:
+                            matchExpressions:
+                              - key: app
+                                operator: In
+                                values:
+                                  - cluster-manager
+                          topologyKey: kubernetes.io/hostname
+                        weight: 30
+                containers:
+                  - args:
+                      - /registration-operator
+                      - hub
+                    image: >-
+                      registry.redhat.io/rhacm2/registration-rhel8-operator@sha256:568d3b5dc4da1dd35c68d1405c274933d6129462b5873e929e25a444c50f1d6b
+                    livenessProbe:
+                      httpGet:
+                        path: /healthz
+                        port: 8443
+                        scheme: HTTPS
+                      initialDelaySeconds: 2
+                      periodSeconds: 10
+                    name: registration-operator
+                    readinessProbe:
+                      httpGet:
+                        path: /healthz
+                        port: 8443
+                        scheme: HTTPS
+                      initialDelaySeconds: 2
+                    resources:
+                      requests:
+                        cpu: 100m
+                        memory: 128Mi
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                        drop:
+                          - ALL
+                      privileged: false
+                      runAsNonRoot: true
+                serviceAccountName: cluster-manager
+        - name: multicluster-observability-operator
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                name: multicluster-observability-operator
+            strategy: { }
+            template:
+              metadata:
+                creationTimestamp: null
+                labels:
+                  name: multicluster-observability-operator
+              spec:
+                containers:
+                  - args:
+                      - '-leader-elect'
+                    command:
+                      - mco-operator
+                    env:
+                      - name: WATCH_NAMESPACE
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: 'metadata.annotations[''olm.targetNamespaces'']'
+                      - name: POD_NAME
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.name
+                      - name: POD_NAMESPACE
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.namespace
+                      - name: OPERATOR_NAME
+                        value: multicluster-observability-operator
+                      - name: TEMPLATES_PATH
+                        value: /usr/local/manifests
+                      - name: SPOKE_NAMESPACE
+                        value: open-cluster-management-addon-observability
+                    image: >-
+                      registry.redhat.io/rhacm2/multicluster-observability-rhel8-operator@sha256:fd283e7f19b6932a1401035583640e2391cae8558cc09242d81b90062eb3a057
+                    lifecycle:
+                      preStop:
+                        exec:
+                          command:
+                            - /bin/sh
+                            - '-c'
+                            - /usr/local/bin/prestop.sh
+                    livenessProbe:
+                      httpGet:
+                        path: /healthz
+                        port: 8081
+                      initialDelaySeconds: 15
+                      periodSeconds: 20
+                    name: multicluster-observability-operator
+                    ports:
+                      - containerPort: 9443
+                        name: webhook-server
+                        protocol: TCP
+                      - containerPort: 8383
+                        name: metrics
+                        protocol: TCP
+                    readinessProbe:
+                      httpGet:
+                        path: /readyz
+                        port: 8081
+                      initialDelaySeconds: 5
+                      periodSeconds: 10
+                    resources:
+                      limits:
+                        cpu: 600m
+                        memory: 1Gi
+                      requests:
+                        cpu: 100m
+                        memory: 128Mi
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                    volumeMounts:
+                      - mountPath: /tmp/k8s-webhook-server/serving-certs
+                        name: cert
+                        readOnly: true
+                serviceAccountName: multicluster-observability-operator
+                volumes:
+                  - name: cert
+                    secret:
+                      defaultMode: 420
+                      secretName: multicluster-observability-operator-webhook-server-cert
+        - name: submariner-addon
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: submariner-addon
+            strategy: { }
+            template:
+              metadata:
+                creationTimestamp: null
+                labels:
+                  app: submariner-addon
+              spec:
+                containers:
+                  - args:
+                      - /submariner
+                      - controller
+                    env:
+                      - name: POD_NAME
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.name
+                    image: >-
+                      registry.redhat.io/rhacm2/submariner-addon-rhel8@sha256:f70e7311ed83ac5042e976cb3d7a7eab546e2121c42437f1e1042b9305b7fc9a
+                    livenessProbe:
+                      httpGet:
+                        path: /healthz
+                        port: 8443
+                        scheme: HTTPS
+                      initialDelaySeconds: 2
+                      periodSeconds: 10
+                    name: submariner-addon
+                    readinessProbe:
+                      httpGet:
+                        path: /healthz
+                        port: 8443
+                        scheme: HTTPS
+                      initialDelaySeconds: 2
+                    resources:
+                      requests:
+                        cpu: 100m
+                        memory: 128Mi
+                serviceAccountName: submariner-addon
+        - name: multicluster-operators-application
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: multicluster-operators-application
+            strategy: { }
+            template:
+              metadata:
+                creationTimestamp: null
+                labels:
+                  app: multicluster-operators-application
+              spec:
+                affinity:
+                  podAntiAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                      - podAffinityTerm:
+                          labelSelector:
+                            matchExpressions:
+                              - key: app
+                                operator: In
+                                values:
+                                  - multicluster-operators-application
+                          topologyKey: failure-domain.beta.kubernetes.io/zone
+                        weight: 70
+                      - podAffinityTerm:
+                          labelSelector:
+                            matchExpressions:
+                              - key: app
+                                operator: In
+                                values:
+                                  - multicluster-operators-application
+                          topologyKey: kubernetes.io/hostname
+                        weight: 35
+                containers:
+                  - command:
+                      - /usr/local/bin/multicluster-operators-placementrule
+                      - '--alsologtostderr'
+                    env:
+                      - name: WATCH_NAMESPACE
+                      - name: POD_NAME
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.name
+                      - name: POD_NAMESPACE
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.namespace
+                      - name: DEPLOYMENT_LABEL
+                        value: multicluster-operators-application
+                      - name: OPERATOR_NAME
+                        value: multicluster-operators-placementrule
+                    image: >-
+                      registry.redhat.io/rhacm2/multicluster-operators-placementrule-rhel8@sha256:bdc06c6b9bcd1b872c15e6bab87b5abbbb5a5f7f68bba8d5f0c5d91f670f5f19
+                    livenessProbe:
+                      exec:
+                        command:
+                          - ls
+                      initialDelaySeconds: 30
+                      periodSeconds: 30
+                    name: multicluster-operators-placementrule
+                    readinessProbe:
+                      exec:
+                        command:
+                          - ls
+                      initialDelaySeconds: 15
+                      periodSeconds: 15
+                    resources:
+                      limits:
+                        cpu: 1500m
+                        memory: 512Mi
+                      requests:
+                        cpu: 300m
+                        memory: 64Mi
+                    volumeMounts:
+                      - mountPath: /tmp
+                        name: tmp
+                  - command:
+                      - /usr/local/bin/gitopscluster
+                      - '--alsologtostderr'
+                    env:
+                      - name: WATCH_NAMESPACE
+                      - name: POD_NAME
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.name
+                      - name: POD_NAMESPACE
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.namespace
+                      - name: DEPLOYMENT_LABEL
+                        value: multicluster-operators-application
+                      - name: OPERATOR_NAME
+                        value: multicluster-operators-gitopscluster
+                    image: >-
+                      registry.redhat.io/rhacm2/multicloud-integrations-rhel8@sha256:8e954521e6dd404dc2e4a10c2cd651349cef300912ec6c4853b08ff4d210923b
+                    livenessProbe:
+                      exec:
+                        command:
+                          - ls
+                      initialDelaySeconds: 15
+                      periodSeconds: 15
+                    name: multicluster-operators-gitopscluster
+                    readinessProbe:
+                      exec:
+                        command:
+                          - ls
+                      initialDelaySeconds: 15
+                      periodSeconds: 15
+                    resources:
+                      limits:
+                        cpu: 100m
+                        memory: 512Mi
+                      requests:
+                        cpu: 25m
+                        memory: 64Mi
+                    volumeMounts:
+                      - mountPath: /tmp
+                        name: tmp
+                  - command:
+                      - /usr/local/bin/multicluster-operators-deployable
+                      - '--alsologtostderr'
+                    env:
+                      - name: WATCH_NAMESPACE
+                      - name: POD_NAME
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.name
+                      - name: POD_NAMESPACE
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.namespace
+                      - name: DEPLOYMENT_LABEL
+                        value: multicluster-operators-application
+                      - name: OPERATOR_NAME
+                        value: multicluster-operators-deployable
+                    image: >-
+                      registry.redhat.io/rhacm2/multicluster-operators-deployable-rhel8@sha256:d5ab1749ae3ffc648dfd8590f909c34225040156aa763b20e5f9d6c5e84907b4
+                    livenessProbe:
+                      exec:
+                        command:
+                          - ls
+                      initialDelaySeconds: 15
+                      periodSeconds: 15
+                    name: multicluster-operators-deployable
+                    readinessProbe:
+                      exec:
+                        command:
+                          - ls
+                      initialDelaySeconds: 15
+                      periodSeconds: 15
+                    resources:
+                      limits:
+                        cpu: 500m
+                        memory: 512Mi
+                      requests:
+                        cpu: 100m
+                        memory: 64Mi
+                    volumeMounts:
+                      - mountPath: /tmp
+                        name: tmp
+                  - command:
+                      - /usr/local/bin/multicluster-operators-application
+                      - '--alsologtostderr'
+                    env:
+                      - name: WATCH_NAMESPACE
+                      - name: POD_NAME
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.name
+                      - name: POD_NAMESPACE
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.namespace
+                      - name: DEPLOYMENT_LABEL
+                        value: multicluster-operators-application
+                      - name: OPERATOR_NAME
+                        value: multicluster-operators-application
+                    image: >-
+                      registry.redhat.io/rhacm2/multicluster-operators-application-rhel8@sha256:d8d06c93f432aebf84eea56d390aaa440f121a44caf28a116092fd7ddcc5c291
+                    livenessProbe:
+                      exec:
+                        command:
+                          - ls
+                      initialDelaySeconds: 15
+                      periodSeconds: 15
+                    name: multicluster-operators-application
+                    ports:
+                      - containerPort: 9442
+                        name: app-whk-server
+                        protocol: TCP
+                    readinessProbe:
+                      exec:
+                        command:
+                          - ls
+                      initialDelaySeconds: 15
+                      periodSeconds: 15
+                    resources:
+                      limits:
+                        cpu: 100m
+                        memory: 512Mi
+                      requests:
+                        cpu: 25m
+                        memory: 64Mi
+                    volumeMounts:
+                      - mountPath: /tmp
+                        name: tmp
+                securityContext:
+                  runAsNonRoot: true
+                serviceAccountName: multicluster-operators
+                volumes:
+                  - emptyDir: { }
+                    name: tmp
+        - name: multicluster-operators-channel
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: multicluster-operators-channel
+            strategy: { }
+            template:
+              metadata:
+                creationTimestamp: null
+                labels:
+                  app: multicluster-operators-channel
+              spec:
+                affinity:
+                  podAntiAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                      - podAffinityTerm:
+                          labelSelector:
+                            matchExpressions:
+                              - key: app
+                                operator: In
+                                values:
+                                  - multicluster-operators-channel
+                          topologyKey: failure-domain.beta.kubernetes.io/zone
+                        weight: 70
+                      - podAffinityTerm:
+                          labelSelector:
+                            matchExpressions:
+                              - key: app
+                                operator: In
+                                values:
+                                  - multicluster-operators-channel
+                          topologyKey: kubernetes.io/hostname
+                        weight: 35
+                containers:
+                  - command:
+                      - /usr/local/bin/multicluster-operators-channel
+                      - '--alsologtostderr'
+                    env:
+                      - name: WATCH_NAMESPACE
+                      - name: POD_NAME
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.name
+                      - name: POD_NAMESPACE
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.namespace
+                      - name: DEPLOYMENT_LABEL
+                        value: multicluster-operators-channel
+                      - name: OPERATOR_NAME
+                        value: multicluster-operators-channel
+                    image: >-
+                      registry.redhat.io/rhacm2/multicluster-operators-channel-rhel8@sha256:de2633312587ab92e7ce19dd581809de694aac0d8504d4c8e57a32a760edbecc
+                    livenessProbe:
+                      exec:
+                        command:
+                          - ls
+                      initialDelaySeconds: 15
+                      periodSeconds: 15
+                    name: multicluster-operators-channel
+                    ports:
+                      - containerPort: 9443
+                        name: chn-whk-server
+                        protocol: TCP
+                    readinessProbe:
+                      exec:
+                        command:
+                          - ls
+                      initialDelaySeconds: 15
+                      periodSeconds: 15
+                    resources:
+                      limits:
+                        cpu: 750m
+                        memory: 1Gi
+                      requests:
+                        cpu: 150m
+                        memory: 128Mi
+                    volumeMounts:
+                      - mountPath: /tmp
+                        name: tmp
+                securityContext:
+                  runAsNonRoot: true
+                serviceAccountName: multicluster-operators
+                volumes:
+                  - emptyDir: { }
+                    name: tmp
         - name: multicluster-operators-standalone-subscription
           spec:
             replicas: 1
@@ -190,3 +976,59 @@ spec:
                   - emptyDir: { }
                     name: tmp
                   - name: multicluster-operators-subscription-tls
+        - name: hive-operator
+          spec:
+            replicas: 1
+            revisionHistoryLimit: 4
+            selector:
+              matchLabels:
+                control-plane: hive-operator
+                controller-tools.k8s.io: '1.0'
+            strategy:
+              type: Recreate
+            template:
+              metadata:
+                creationTimestamp: null
+                labels:
+                  control-plane: hive-operator
+                  controller-tools.k8s.io: '1.0'
+              spec:
+                containers:
+                  - command:
+                      - /opt/services/hive-operator
+                      - '--log-level'
+                      - info
+                    env:
+                      - name: CLI_CACHE_DIR
+                        value: /var/cache/kubectl
+                      - name: HIVE_OPERATOR_NS
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.namespace
+                    image: >-
+                      registry.redhat.io/rhacm2/openshift-hive-rhel8@sha256:545801be0c283b9e0cd056c59404a0a68a21e9fdb0ec635cdf2118e38b2363ce
+                    livenessProbe:
+                      httpGet:
+                        path: /healthz
+                        port: 8080
+                    name: hive-operator
+                    ports:
+                      - containerPort: 2112
+                        name: metrics
+                        protocol: TCP
+                    readinessProbe:
+                      httpGet:
+                        path: /readyz
+                        port: 8080
+                    resources:
+                      requests:
+                        cpu: 100m
+                        memory: 256Mi
+                    volumeMounts:
+                      - mountPath: /var/cache/kubectl
+                        name: kubectl-cache
+                serviceAccountName: hive-operator
+                terminationGracePeriodSeconds: 10
+                volumes:
+                  - emptyDir: { }
+                    name: kubectl-cache
