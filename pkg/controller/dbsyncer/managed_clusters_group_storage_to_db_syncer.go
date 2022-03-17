@@ -47,7 +47,7 @@ type ManagedClustersGroupStorageToDBSyncer struct {
 
 // SyncGitRepo operates on a local git repo to sync contained objects of managed-cluster-groups.
 func (syncer *ManagedClustersGroupStorageToDBSyncer) SyncGitRepo(ctx context.Context, base64UserIdentity string,
-	base64UserGroup string, gitRepoFullPath string,
+	base64UserGroup string, gitRepoFullPath string, forceReconcile bool,
 ) bool {
 	repo, err := git.PlainOpen(gitRepoFullPath)
 	if err != nil {
@@ -65,6 +65,10 @@ func (syncer *ManagedClustersGroupStorageToDBSyncer) SyncGitRepo(ctx context.Con
 	if err != nil {
 		syncer.log.Error(err, "failed to get commit of head", "root", gitRepoFullPath)
 		return false
+	}
+
+	if forceReconcile {
+		syncer.gitRepoToCommitMap[gitRepoFullPath] = ""
 	}
 
 	if syncedCommit, found := syncer.gitRepoToCommitMap[gitRepoFullPath]; !found {

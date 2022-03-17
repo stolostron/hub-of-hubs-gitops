@@ -15,7 +15,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const hubOfHubsSubscriptionsNamespace = "hoh-subscriptions"
+const (
+	hubOfHubsSubscriptionsNamespace = "hoh-subscriptions"
+	fullReconciliationInterval      = 1 * time.Hour
+)
 
 var (
 	errSyncerTagNotFound                = fmt.Errorf("subscription's assigned syncer tag is not registered")
@@ -47,11 +50,12 @@ func (walker *gitStorageWalker) Start(ctx context.Context) error {
 
 func (walker *gitStorageWalker) init(ctx context.Context) {
 	walker.log.Info("initialized git storage walker", "root", walker.rootDirPath)
-	walker.syncGitRepos(ctx)
+	walker.syncGitRepos(ctx, true)
 }
 
 func (walker *gitStorageWalker) periodicSync(ctx context.Context) {
 	ticker := time.NewTicker(walker.intervalPolicy.GetInterval())
+	forceReconcileTicker := time.NewTicker(fullReconciliationInterval)
 
 	for {
 		select {
@@ -59,10 +63,13 @@ func (walker *gitStorageWalker) periodicSync(ctx context.Context) {
 			ticker.Stop()
 			return
 
+		case <-forceReconcileTicker.C:
+			walker.syncGitRepos(ctx, true)
+
 		case <-ticker.C:
 			// define timeout of max sync interval on the sync function
 			ctxWithTimeout, cancelFunc := context.WithTimeout(ctx, walker.intervalPolicy.GetMaxInterval())
-			synced := walker.syncGitRepos(ctxWithTimeout)
+			synced := walker.syncGitRepos(ctxWithTimeout, false)
 
 			cancelFunc() // cancel child ctx and is used to cleanup resources once context expires or sync is done.
 
@@ -88,7 +95,7 @@ func (walker *gitStorageWalker) periodicSync(ctx context.Context) {
 	}
 }
 
-func (walker *gitStorageWalker) syncGitRepos(ctx context.Context) bool {
+func (walker *gitStorageWalker) syncGitRepos(ctx context.Context, forceReconcile bool) bool {
 	gitRepos, err := ioutil.ReadDir(walker.rootDirPath)
 	if err != nil {
 		walker.log.Error(err, "failed to open git root folder", "root-path", walker.rootDirPath)
@@ -121,7 +128,7 @@ func (walker *gitStorageWalker) syncGitRepos(ctx context.Context) bool {
 			continue
 		}
 
-		if dbSyncer.SyncGitRepo(ctx, base64UserIdentity, base64UserGroup, repoFullPath) {
+		if dbSyncer.SyncGitRepo(ctx, base64UserIdentity, base64UserGroup, repoFullPath, forceReconcile) {
 			successRate++
 		}
 	}
