@@ -41,16 +41,24 @@ that claims it to your hub of hubs cluster:
 #### Deploying the modified Subscription CRD
     kubectl -n open-cluster-management apply -f deploy/customized-subscriptions-operator/apps.open-cluster-management.io_subscriptions_crd_v1.yaml
 
+#### Creating the namespace for accessible Subscription CRs
+    kubectl create namespace hoh-subscriptions
+
 #### Deploying the modified operator
 The subscriptions operator deployment is managed by the [ACM for Kubernetes Operator](https://console-openshift-console.apps.mayoub-hoh2.scale.red-chesterfield.com/k8s/ns/open-cluster-management/operators.coreos.com~v1alpha1~ClusterServiceVersion/advanced-cluster-management.v2.4.2). To have the latter deploy the customized version, modify the "multicluster-operators-standalone-subscription" deployment 
-to that present in [standalone-subscriptions-operator-deployment.yaml](deploy/customized-subscriptions-operator/standalone-subscriptions-operator-deployment.yaml).
+to that present in [standalone-subscriptions-operator-deployment.yaml](deploy/customized-subscriptions-operator/operators-subscriptions-deployments-patch.yaml).
 
 The modified code has small modifications of the upstream stable release of the operator in [Open Cluster Management](https://github.com/open-cluster-management-io) organization,
 therefore it is forked to a [personal Git](https://github.com/vMaroon/multicloud-operators-subscription).
 
-TODO: automate deployment
-### Creating the namespace for accessible Subscription CRs
-    kubectl create namespace hoh-subscriptions
+1. Set the `MODIFIED_OPERATOR_IMAGE` environment variable to hold the URL of the image:
+    ```
+    $ export MODIFIED_OPERATOR_IMAGE=quay.io/maroonayoub/multicloud-operators-subscription@sha256:1c57e1e77ea3c929c7176681d5b64eca43354bbaf00aeb7f7ddb01d3c6d15ad0
+    ```
+1. Patch the ACM for K8s operator:
+   ```
+   kubectl -n open-cluster-management patch ClusterServiceVersion advanced-cluster-management.v2.4.2 --type=merge --patch "$(envsubst < deploy/customized-subscriptions-operator/operators-subscriptions-deployments-patch.yaml)"
+   ```
 
 ### Visit [examples](examples) for example Subscription deployments / Git objects
 
@@ -84,10 +92,9 @@ TODO: automate deployment
       ```
 
    1. Create a secret with your database url:
-
-    ```
-    kubectl create secret generic hub-of-hubs-database-transport-bridge-secret -n open-cluster-management --from-literal=url=$DATABASE_URL
-    ```
+       ```
+       kubectl create secret generic hub-of-hubs-database-transport-bridge-secret -n open-cluster-management --from-literal=url=$DATABASE_URL
+       ```
 
 1.  Set the `REGISTRY` environment variable to hold the name of your docker registry:
     ```
