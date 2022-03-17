@@ -19,8 +19,10 @@ The Hub-of-Hubs non-k8s GitOps shares a volume (persistent storage) with a
 where the subscriptions-operator is responsible for syncing Git objects via the ACM Subscriptions mechanism, 
 while the non-k8s GitOps component watches the files and processes them.
 
-Disclaimer: the component was implemented to demonstrate the mechanism. It is not tested for scale and can use 
+Disclaimers: 
+* The component was implemented to demonstrate the mechanism. It is not tested for scale and can use 
 optimizations such as parallelized storage-walking / parallelized DB job handling.
+* Currently, only ManagedClustersGroup nonk8s Git object is supported, with "INSERT" functionality support.
 
 ## Prerequisites
 ### Deploying the Shared Volume
