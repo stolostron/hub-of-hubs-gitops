@@ -24,10 +24,10 @@ optimizations such as parallelized storage-walking / parallelized DB job handlin
 
 ## Prerequisites
 ### Deploying the Shared Volume
-1. Set the `NODE_HOSTNAME` to the hostname of the node (e.g., `ip-10-0-136-193`) that the storage, nonk8s-gitops and the 
+1. Set the `GITOPS_NODE_HOSTNAME` to the hostname of the node (e.g., `ip-10-0-136-193`) that the storage, nonk8s-gitops and the 
 customized operator will run on:
     ```
-    $ export NODE_HOSTNAME=...
+    $ export GITOPS_NODE_HOSTNAME=...
     ```
 
 2. Run the following command to deploy the `hoh-gitops-pv` PersistentVolume and the `hoh-gitops-pv-claim` PersistentVolumeClaim 
