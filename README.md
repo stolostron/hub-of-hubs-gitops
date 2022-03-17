@@ -120,3 +120,14 @@ therefore it is forked to a [personal Git](https://github.com/vMaroon/multicloud
     ```
     envsubst < deploy/hub-of-hubs-nonk8s-gitops.yaml.template | kubectl delete -f -
     ```
+
+1.  If you wish to revert the ACM for K8s operator's customization, run the following:
+    ```
+    kubectl -n open-cluster-management patch ClusterServiceVersion advanced-cluster-management.v2.4.2 \ 
+       --type=merge --patch $(cat deploy/customized-subscriptions-operator/revert-operators-subscriptions-deployments-patch.yaml)
+    ```
+
+1.  Finally, delete PV and PVC:
+    ```
+    kubectl -n open-cluster-management delete -f deploy/hub-of-hubs-gitops-pv.yaml
+    ```
