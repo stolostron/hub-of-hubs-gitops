@@ -13,7 +13,7 @@ Go to the [Contributing guide](CONTRIBUTING.md) to learn how to get involved.
 ## Overview
 ![image](https://user-images.githubusercontent.com/73340153/159141166-b6b75c28-3c4c-4d08-b70d-14f49e88b557.png)
 
-The Hub-of-Hubs (HOH) GitOps components shares a volume (persistent storage) with a 
+The Hub-of-Hubs (HOH) GitOps component shares a volume (persistent storage) with a 
 [modified version](https://github.com/vMaroon/multicloud-operators-subscription) of the 
 [multicloud-operators-subscription](https://github.com/open-cluster-management-io/multicloud-operators-subscription) operator,
 where the subscriptions-operator is responsible for syncing Git objects via the ACM Subscriptions mechanism, 
