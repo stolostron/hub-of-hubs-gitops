@@ -2,20 +2,20 @@
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: hub-of-hubs-nonk8s-gitops
+  name: hub-of-hubs-gitops
 roleRef:
   kind: ClusterRole
-  name: hub-of-hubs-nonk8s-gitops
+  name: hub-of-hubs-gitops
   apiGroup: rbac.authorization.k8s.io
 subjects:
 - kind: ServiceAccount
-  name: hub-of-hubs-nonk8s-gitops
+  name: hub-of-hubs-gitops
   namespace: open-cluster-management
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: hub-of-hubs-nonk8s-gitops
+  name: hub-of-hubs-gitops
 rules:
 - apiGroups:
   - ""
@@ -52,54 +52,54 @@ rules:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: hub-of-hubs-nonk8s-gitops
+  name: hub-of-hubs-gitops
   namespace: open-cluster-management
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: hub-of-hubs-nonk8s-gitops
+  name: hub-of-hubs-gitops
   namespace: open-cluster-management
   labels:
-    app: hub-of-hubs-nonk8s-gitops
-    service: hub-of-hubs-nonk8s-gitops
+    app: hub-of-hubs-gitops
+    service: hub-of-hubs-gitops
   annotations:
-    service.beta.openshift.io/serving-cert-secret-name: hub-of-hubs-nonk8s-gitops-certs
+    service.beta.openshift.io/serving-cert-secret-name: hub-of-hubs-gitops-certs
 spec:
   ports:
   - port: 8080
     name: http
   selector:
-    name: hub-of-hubs-nonk8s-gitops
+    name: hub-of-hubs-gitops
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: hub-of-hubs-nonk8s-gitops-ca-bundle
+  name: hub-of-hubs-gitops-ca-bundle
   namespace: open-cluster-management
   annotations:
     service.beta.openshift.io/inject-cabundle: "true"
   labels:
-    service: hub-of-hubs-nonk8s-gitops
+    service: hub-of-hubs-gitops
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hub-of-hubs-nonk8s-gitops
+  name: hub-of-hubs-gitops
   namespace: open-cluster-management
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: hub-of-hubs-nonk8s-gitops
+      name: hub-of-hubs-gitops
   template:
     metadata:
       labels:
-        name: hub-of-hubs-nonk8s-gitops
+        name: hub-of-hubs-gitops
     spec:
-      serviceAccountName: hub-of-hubs-nonk8s-gitops
+      serviceAccountName: hub-of-hubs-gitops
       containers:
-        - name: hub-of-hubs-nonk8s-gitops
+        - name: hub-of-hubs-gitops
           image: $IMAGE
           securityContext:
             privileged: true
@@ -145,8 +145,8 @@ spec:
             claimName: hoh-gitops-pv-claim
         - name: hub-of-hubs-rbac-ca
           configMap:
-            name: hub-of-hubs-nonk8s-gitops-ca-bundle
+            name: hub-of-hubs-gitops-ca-bundle
         - name: certs
           secret:
-            secretName: hub-of-hubs-nonk8s-gitops-certs
+            secretName: hub-of-hubs-gitops-certs
 ---

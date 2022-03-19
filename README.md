@@ -1,32 +1,32 @@
 [comment]: # ( Copyright Contributors to the Open Cluster Management project )
 
-# Hub-of-Hubs Non-K8s GitOps
+# Hub-of-Hubs GitOps
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/stolostron/hub-of-hubs-nonk8s-gitops)](https://goreportcard.com/report/github.com/stolostron/hub-of-hubs-nonk8s-gitops)
-[![Go Reference](https://pkg.go.dev/badge/github.com/stolostron/hub-of-hubs-nonk8s-gitops)](https://pkg.go.dev/github.com/stolostron/hub-of-hubs-nonk8s-gitops)
-[![License](https://img.shields.io/github/license/stolostron/hub-of-hubs-nonk8s-gitops)](/LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/stolostron/hub-of-hubs-gitops)](https://goreportcard.com/report/github.com/stolostron/hub-of-hubs-gitops)
+[![Go Reference](https://pkg.go.dev/badge/github.com/stolostron/hub-of-hubs-gitops)](https://pkg.go.dev/github.com/stolostron/hub-of-hubs-gitops)
+[![License](https://img.shields.io/github/license/stolostron/hub-of-hubs-gitops)](/LICENSE)
 
-The non-k8s GitOps component of [Hub-of-Hubs](https://github.com/stolostron/hub-of-hubs).
+The GitOps component of [Hub-of-Hubs](https://github.com/stolostron/hub-of-hubs).
 
 Go to the [Contributing guide](CONTRIBUTING.md) to learn how to get involved.
 
 ## Overview
 ![image](https://user-images.githubusercontent.com/73340153/158602131-29bed67e-8e7c-4bcc-8a8e-b46675472d9e.png)
 
-The Hub-of-Hubs non-k8s GitOps shares a volume (persistent storage) with a 
+The Hub-of-Hubs (HOH) GitOps components shares a volume (persistent storage) with a 
 [modified version](https://github.com/vMaroon/multicloud-operators-subscription) of the 
-[multicloud-operators-subscription](https://github.com/open-cluster-management-io/multicloud-operators-subscription) component,
+[multicloud-operators-subscription](https://github.com/open-cluster-management-io/multicloud-operators-subscription) operator,
 where the subscriptions-operator is responsible for syncing Git objects via the ACM Subscriptions mechanism, 
-while the non-k8s GitOps component watches the files and processes them.
+while the HOH GitOps component watches the files and processes them to provide support for customized gitops / non-k8s gitops.
 
 Disclaimers: 
 * The component was implemented to demonstrate the mechanism. It is not tested for scale and can use 
 optimizations such as parallelized storage-walking / parallelized DB job handling.
-* Currently, only ManagedClustersGroup nonk8s Git object is supported, with "INSERT" functionality support.
+* Currently, only ManagedClustersGroup (non-k8s) Git object is supported, with "INSERT" functionality support.
 
 ## Prerequisites
 ### Deploying the Shared Volume
-1. Set the `GITOPS_NODE_HOSTNAME` to the hostname of the node (e.g., `ip-10-0-136-193`) that the storage, nonk8s-gitops and the 
+1. Set the `GITOPS_NODE_HOSTNAME` to the hostname of the node (e.g., `ip-10-0-136-193`) that the storage, HOH-gitops and the 
 customized operator will run on:
     ```
     $ export GITOPS_NODE_HOSTNAME=$(kubectl get node --selector='node-role.kubernetes.io/worker' -o=jsonpath='{.items[0].metadata.labels.kubernetes\.io\/hostname}')
@@ -109,16 +109,16 @@ therefore it is forked to a [personal Git](https://github.com/vMaroon/multicloud
     $ export IMAGE=$REGISTRY/$(basename $(pwd)):latest
     ```
 
-1.  Run the following command to deploy the `hub-of-hubs-nonk8s-gitops` to your hub of hubs cluster:
+1.  Run the following command to deploy the `hub-of-hubs-gitops` to your hub of hubs cluster:
     ```
-    envsubst < deploy/hub-of-hubs-nonk8s-gitops.yaml.template | kubectl apply -f -
+    envsubst < deploy/hub-of-hubs-gitops.yaml.template | kubectl apply -f -
     ```
 
 ## Cleanup from the hub of hubs
 
-1.  Run the following command to clean `hub-of-hubs-nonk8s-gitops` from your hub of hubs cluster:
+1.  Run the following command to clean `hub-of-hubs-gitops` from your hub of hubs cluster:
     ```
-    envsubst < deploy/hub-of-hubs-nonk8s-gitops.yaml.template | kubectl delete -f -
+    envsubst < deploy/hub-of-hubs-gitops.yaml.template | kubectl delete -f -
     ```
 
 1.  If you wish to revert the ACM for K8s operator's customization, run the following:

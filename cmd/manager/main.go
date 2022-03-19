@@ -29,7 +29,7 @@ const (
 	envVarControllerNamespace       = "POD_NAMESPACE"
 	envVarSyncInterval              = "SYNC_INTERVAL"
 	envVarGitStorageDirPath         = "SUBSCRIPTION_GIT_STORAGE_DIR_PATH"
-	leaderElectionLockName          = "hub-of-hubs-nonk8s-gitops-lock"
+	leaderElectionLockName          = "hub-of-hubs-gitops-lock"
 )
 
 var errEnvVarNotFound = errors.New("environment variable not found")

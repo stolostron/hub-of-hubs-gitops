@@ -22,7 +22,7 @@ Run:
 ```
 
 ### Deploy the Subscription:
-The Subscription is extended with `spec.placement.hubOfHubsGitOps` field to hold the type of a nonk8s-gitops processor.
+The Subscription is extended with `spec.placement.hubOfHubsGitOps` field to hold the type of a gitops processor.
 
 The `spec.placement.local` field has to be set to true when the above field is set, otherwise the Subscription will be ignored.
 ```
