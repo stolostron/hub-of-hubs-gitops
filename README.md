@@ -11,7 +11,7 @@ The GitOps component of [Hub-of-Hubs](https://github.com/stolostron/hub-of-hubs)
 Go to the [Contributing guide](CONTRIBUTING.md) to learn how to get involved.
 
 ## Overview
-![image](https://user-images.githubusercontent.com/73340153/158602131-29bed67e-8e7c-4bcc-8a8e-b46675472d9e.png)
+![image](https://user-images.githubusercontent.com/73340153/159141166-b6b75c28-3c4c-4d08-b70d-14f49e88b557.png)
 
 The Hub-of-Hubs (HOH) GitOps components shares a volume (persistent storage) with a 
 [modified version](https://github.com/vMaroon/multicloud-operators-subscription) of the 
