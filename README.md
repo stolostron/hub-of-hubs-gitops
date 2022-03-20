@@ -108,6 +108,11 @@ therefore it is forked to a [personal Git](https://github.com/vMaroon/multicloud
     ```
     $ export IMAGE=$REGISTRY/$(basename $(pwd)):latest
     ```
+    
+1.  Run the following command to give the `hub-of-hubs-gitops` service account "privileged" security context constraint permissions:
+    ```
+    oc adm policy add-scc-to-user privileged -z hub-of-hubs-gitops -n open-cluster-management
+    ```
 
 1.  Run the following command to deploy the `hub-of-hubs-gitops` to your hub of hubs cluster:
     ```
@@ -121,6 +126,11 @@ therefore it is forked to a [personal Git](https://github.com/vMaroon/multicloud
     envsubst < deploy/hub-of-hubs-gitops.yaml.template | kubectl delete -f -
     ```
 
+1.  Run the following command to remove the "privileged" security context constraint permissions from `hub-of-hubs-gitops` service account :
+    ```
+    oc adm policy remove-scc-from-user privileged -z hub-of-hubs-gitops -n open-cluster-management
+    ```
+    
 1.  If you wish to revert the ACM for K8s operator's customization, run the following:
     ```
     kubectl -n open-cluster-management patch ClusterServiceVersion advanced-cluster-management.v2.4.2 \ 
