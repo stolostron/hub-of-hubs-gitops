@@ -22,7 +22,6 @@ while the HOH GitOps component watches the files and processes them to provide s
 Disclaimers: 
 * The component was implemented to demonstrate the mechanism. It is not tested for scale and can use 
 optimizations such as parallelized storage-walking / parallelized DB job handling.
-* Currently, only ManagedClustersGroup (non-k8s) Git object is supported, with "INSERT" functionality support.
 
 ## Prerequisites
 ### Deploying the Shared Volume

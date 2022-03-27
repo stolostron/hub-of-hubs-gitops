@@ -1,8 +1,8 @@
 apiVersion: apps.open-cluster-management.io/v1
 kind: Channel
 metadata:
-  name: test-repo-git
+  name: hoh-gitops
   namespace: hoh-subscriptions
 spec:
     type: Git
-    pathname: https://github.com/vMaroon/test-repo
+    pathname: https://github.com/stolostron/hub-of-hubs-gitops
