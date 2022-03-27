@@ -1,70 +1,135 @@
 # Examples
-In this example we're going to deploy a Subscription that syncs a repository containing two ManagedClustersGroup objects.
+In this example we're going to deploy subscriptions that sync nonk8s objects found in 
+[nonk8s-resources](examples/git-objects/nonk8s-resources) and k8s-native resources found in [nonk8s-resources](examples/git-objects/k8s-resources)
+
 #### Familiarity with ACM's Channel/Subscription logic is assumed.
 
-## Subscription
-The examples below refer to a concrete Git repository. You may change the Channel's spec.pathname to any of yours.
-### Deploy the Channel:
-The channel is a regular ACM channel that points to a repository
+---
+## Deploy the Channel / Subscription resources:
+```
+kubectl apply -f subscriptions
+```
+
+---
+## Applied Resources
+### Channel
+The channel is a regular ACM channel that points to this repository
 ```
 apiVersion: apps.open-cluster-management.io/v1
 kind: Channel
 metadata:
-  name: test-repo-git
+  name: hoh-gitops
   namespace: hoh-subscriptions
 spec:
     type: Git
-    pathname: https://github.com/vMaroon/test-repo
-```
-Run:
-```
-    kubectl apply -f subscriptions/01-channel.yaml
+    pathname: https://github.com/stolostron/hub-of-hubs-gitops
 ```
 
-### Deploy the Subscription:
-The Subscription is extended with `spec.placement.hubOfHubsGitOps` field to hold the type of a gitops processor.
-
-The `spec.placement.local` field has to be set to true when the above field is set, otherwise the Subscription will be ignored.
+### Subscriptions:
+#### k8s-native resources using regular ACM subscription:
 ```
 apiVersion: apps.open-cluster-management.io/v1
 kind: Subscription
 metadata:
-  name: git-test-repo-subscription
-  namespace: hoh-subscriptions
+  name: hoh-gitops-k8s-resources-subscription
+  namespace: default
   annotations:
+    apps.open-cluster-management.io/git-path: examples/git-objects/k8s-resources
     apps.open-cluster-management.io/github-branch: main
 spec:
-  channel: hoh-subscriptions/test-repo-git
-  name: test-repo
+  channel: hoh-subscriptions/hoh-gitops
+  name: hub-of-hubs-gitops
+  placement:
+    local: true
+```
+#### nonk8s-native resources using modified subscriptions:
+The customized Subscription is extended with `spec.placement.hubOfHubsGitOps` field to hold the type of a resource processor.
+
+The `spec.placement.local` field has to be set to true when the above field is set, otherwise the Subscription will be ignored.
+
+```
+apiVersion: apps.open-cluster-management.io/v1
+kind: Subscription
+metadata:
+  name: hoh-gitops-mcgroup-subscription
+  namespace: hoh-subscriptions
+  annotations:
+    apps.open-cluster-management.io/git-path: examples/git-objects/nonk8s-resources/managed-clusters-group
+    apps.open-cluster-management.io/github-branch: main
+spec:
+  channel: hoh-subscriptions/hoh-gitops
+  name: hub-of-hubs-gitops
   placement:
     local: true
     hubOfHubsGitOps: ManagedClustersGroup
 ```
-Run:
 ```
-    kubectl apply -f subscriptions/01-channel.yaml
+apiVersion: apps.open-cluster-management.io/v1
+kind: Subscription
+metadata:
+  name: hoh-gitops-mcset-subscription
+  namespace: hoh-subscriptions
+  annotations:
+    apps.open-cluster-management.io/git-path: examples/git-objects/nonk8s-resources/managed-cluster-set
+    apps.open-cluster-management.io/github-branch: main
+spec:
+  channel: hoh-subscriptions/hoh-gitops
+  name: hub-of-hubs-gitops
+  placement:
+    local: true
+    hubOfHubsGitOps: HubOfHubsManagedClusterSet
+```
+---
+## Git Objects
+Git objects can be k8s resources that are pulled and applied to the cluster via regular subscriptions, e.g.:
+```
+apiVersion: cluster.open-cluster-management.io/v1alpha1
+kind: Placement
+metadata:
+  name: placement-policy-etcdencryption-gitops-hohset
+  namespace: default
+spec:
+  predicates:
+    - requiredClusterSelector:
+        labelSelector:
+          matchLabels:
+            vendor: Kind
 ```
 
-## Git Object
-Currently, the only supported type of Git object is ManagedClustersGroup, which groups a set of Managed-Clusters.
+Additionally, they can be custom yamls representing nonk8s resources that specific hub-of-hubs-gitops processors can handle.
+Such resources can be found in [nonk8s-resources](examples/git-objects/k8s-resources) and their API is present in 
+[pkg/types](pkg/types).
 
-Example object:
+For example:
 ```
 kind: ManagedClustersGroup # not a k8s resource, but the formatting is intentionally similar.
 metadata:
-  name: east-region-group # name of group
+  name: west-region-group # name of group
 spec:
   tagValue: 'true'
   identifiers: # can contain multiple hub-identifier entries
     - hubIdentifier:
         name: hub3 # hub name
         managedClusterIdentifiers: # currently, MCs are identified by name.
-          - cluster5
-          - cluster6
           - cluster7
-    - hubIdentifier:
-        name: hub4
-        managedClusterIdentifiers:
+          - cluster8
           - cluster9
   # identified MCs will be labeled with hub-of-hubs.open-cluster-management.io/{metadata.name}={spec.tagValue}
 ```
+
+Custom resources can wrap k8s resources, such as:
+```
+kind: HubOfHubsManagedClusterSet # not a k8s resource, but the formatting is intentionally similar.
+metadata:
+  name: hoh-set
+spec:
+  identifiers: # can contain multiple hub-identifier entries
+    - hubIdentifier:
+        name: hub3 # hub name
+        managedClusterIdentifiers: # currently, MCs are identified by name.
+          - cluster8
+          - cluster9
+  # identified MCs will be labeled with cluster.open-cluster-management.io/clusterset={metadata.name}
+```
+
+which leads to the creation of the ManagedClusterSet `hoh-set`, its storing in the database and the assigning of proper labels for all identified managed-clusters.

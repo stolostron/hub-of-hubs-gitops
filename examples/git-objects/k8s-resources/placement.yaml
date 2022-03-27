@@ -1,0 +1,11 @@
+apiVersion: cluster.open-cluster-management.io/v1alpha1
+kind: Placement
+metadata:
+  name: placement-policy-etcdencryption-gitops-hohset
+  namespace: default
+spec:
+  predicates:
+    - requiredClusterSelector:
+        labelSelector:
+          matchLabels:
+            vendor: Kind
