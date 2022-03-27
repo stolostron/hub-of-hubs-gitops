@@ -22,11 +22,11 @@ type SpecDB interface {
 
 // ManagedClusterLabelsSpecDB is the interface needed by the spec transport bridge to sync managed-cluster labels table.
 type ManagedClusterLabelsSpecDB interface {
-	// UpdateManagedClustersSetLabel receives a map of hub -> set of managed clusters and updates their labels to be
-	// appended by the given group tag label.
+	// UpdateLabelForManagedClusters receives a map of hub -> set of managed clusters and updates their labels to be
+	// appended by the given label
 	//
 	// If the operation fails, hubToManagedClustersMap will contain un-synced entries only.
-	UpdateManagedClustersSetLabel(ctx context.Context, tableName string, labelKey string, labelValue string,
+	UpdateLabelForManagedClusters(ctx context.Context, tableName string, labelKey string, labelValue string,
 		hubToManagedClustersMap map[string]set.Set) error
 	// Stop stops db and releases resources (e.g. connection pool).
 	Stop()

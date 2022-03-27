@@ -6,35 +6,35 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// NewManagedClustersGroupFromBytes unmarshals a byte slice into a ManagedClusterSet.
+// NewManagedClustersGroupFromBytes unmarshals a byte slice into a ManagedClustersGroup.
 func NewManagedClustersGroupFromBytes(data []byte) (*ManagedClustersGroup, error) {
-	managedClustersSet := &ManagedClustersGroup{}
+	managedClustersGroup := &ManagedClustersGroup{}
 
-	if err := yaml.Unmarshal(data, managedClustersSet); err != nil {
+	if err := yaml.Unmarshal(data, managedClustersGroup); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal yaml - %w", err)
 	}
 
-	return managedClustersSet, nil
+	return managedClustersGroup, nil
 }
 
 // ManagedClustersGroup implements the API for a ManagedClustersGroup.
 type ManagedClustersGroup struct {
 	// Kind is kind of yaml.
 	Kind string `yaml:"kind"`
-	// ManagedClustersSetMetadata is the metadata of a ManagedClustersGroup.
+	// ManagedClustersGroupMetadata is the metadata of a ManagedClustersGroup.
 	Metadata ManagedClustersGroupMetadata `yaml:"metadata"`
-	// ManagedClustersSetSpec is the spec of a ManagedClustersGroup.
+	// ManagedClustersGroupSpec is the spec of a ManagedClustersGroup.
 	Spec ManagedClustersGroupSpec `yaml:"spec"`
 }
 
 // ManagedClustersGroupMetadata is the metadata of a ManagedClustersGroup.
 type ManagedClustersGroupMetadata struct {
-	// Name of the clusters set.
+	// Name of the clusters group.
 	Name string `yaml:"name"`
 }
 
 // ManagedClustersGroupSpec is the spec of a ManagedClustersGroup. The spec contains identifiers of MCs to be tagged
-// with the cluster set.
+// with the cluster group.
 type ManagedClustersGroupSpec struct {
 	// TagValue is the value that will be assigned to the group label's key.
 	TagValue string `yaml:"tagValue"`

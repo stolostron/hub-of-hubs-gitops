@@ -16,13 +16,16 @@ const (
 	retryInterval                     = 5 * time.Second
 )
 
-var errDidNotSyncAllEntries = errors.New("failed to sync all entries")
+var (
+	errDidNotSyncAllEntries              = errors.New("failed to sync all entries")
+	errOptimisticConcurrencyUpdateFailed = errors.New("zero rows were affected by an optimistic concurrency update")
+)
 
-// UpdateManagedClustersSetLabel receives a map of hub -> set of managed clusters and updates their labels to be
-// appended by the given group tag label.
+// UpdateLabelForManagedClusters receives a map of hub -> set of managed clusters and updates their labels to be
+// appended by the given label
 //
 // If the operation fails, hubToManagedClustersMap will contain un-synced entries only.
-func (p *PostgreSQL) UpdateManagedClustersSetLabel(ctx context.Context, tableName string, labelKey string,
+func (p *PostgreSQL) UpdateLabelForManagedClusters(ctx context.Context, tableName string, labelKey string,
 	labelValue string, hubToManagedClustersMap map[string]set.Set,
 ) error {
 	intervalPolicy := intervalpolicy.NewExponentialBackoffPolicy(retryInterval)
@@ -113,7 +116,7 @@ func (p *PostgreSQL) updateLabels(ctx context.Context, hubName string, cluster s
 	labelsToRemove := map[string]struct{}{}
 
 	for key, value := range currentLabelsToAdd {
-		if len(key) >= len(db.HubOfHubsGroup) && key[:len(db.HubOfHubsGroup)] == db.HubOfHubsGroup {
+		if labelKeyIsAllowed(key) {
 			labelsToAdd[key] = value // label should be retained
 			continue
 		}
@@ -157,7 +160,7 @@ func (p *PostgreSQL) putRow(ctx context.Context, cluster string, labelsToAdd map
 		newLabelsToAdd[key] = value
 	}
 
-	_, err := p.conn.Exec(ctx,
+	commandTag, err := p.conn.Exec(ctx,
 		`UPDATE spec.managed_clusters_labels SET
 		labels = $1::jsonb,
 		deleted_label_keys = $2::jsonb,
@@ -167,6 +170,10 @@ func (p *PostgreSQL) putRow(ctx context.Context, cluster string, labelsToAdd map
 		newLabelsToAdd, p.getKeys(newLabelsToRemove), cluster, version)
 	if err != nil {
 		return fmt.Errorf("failed to insert a row: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return errOptimisticConcurrencyUpdateFailed
 	}
 
 	return nil

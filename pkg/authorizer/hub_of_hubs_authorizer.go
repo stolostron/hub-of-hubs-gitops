@@ -104,7 +104,6 @@ func (auth *HubOfHubsAuthorizer) filterByAuthorization(ctx context.Context, user
 		return denyAll
 	}
 
-	//nolint
 	var sb strings.Builder
 
 	for _, rawQuery := range queries {
