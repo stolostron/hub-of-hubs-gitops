@@ -50,6 +50,7 @@ spec:
 ```
 #### nonk8s-native resources using modified subscriptions:
 The customized Subscription is extended with `spec.placement.hubOfHubsGitOps` field to hold the type of a resource processor.
+Note that this sets the file-type for **all** the files present in the repository/git-path handled by the subscription.
 
 The `spec.placement.local` field has to be set to true when the above field is set, otherwise the Subscription will be ignored.
 
