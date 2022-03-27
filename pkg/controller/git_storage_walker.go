@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/controller/dbsyncer"
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/intervalpolicy"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	appv1 "open-cluster-management.io/multicloud-operators-subscription/pkg/apis/apps/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -24,7 +26,7 @@ var (
 	errSyncerTagNotFound                = fmt.Errorf("subscription's assigned syncer tag is not registered")
 	errUserIdentityAnnotationNotFound   = fmt.Errorf("user-identity annotation was not found on subscription")
 	errUserGroupAnnotationNotFound      = fmt.Errorf("user-group annotation was not found on subscription")
-	errHubOfHubsGitopsPlacementNotFound = fmt.Errorf("hubOfHubsGitops was not set in subscription.spec.placement")
+	errHubOfHubsGitopsPlacementNotFound = fmt.Errorf("hubOfHubsGitOps was not set in subscription.spec.placement")
 )
 
 // gitStorageWalker watches a local git storage root (contains git repositories) and syncs entries via registered
@@ -111,8 +113,19 @@ func (walker *gitStorageWalker) syncGitRepos(ctx context.Context, forceReconcile
 
 		repoFullPath := filepath.Join(walker.rootDirPath, gitRepo.Name())
 
-		syncerTag, base64UserIdentity, base64UserGroup, err := walker.getInfoFromSubscription(ctx, gitRepo.Name())
+		syncerTag, gitPath, base64UserIdentity, base64UserGroup,
+			err := walker.getInfoFromSubscription(ctx, gitRepo.Name())
 		if err != nil {
+			if apierrors.IsNotFound(err) {
+				// resource was deleted, delete folder (safe since writer writes by resource)
+				if err := os.RemoveAll(repoFullPath); err != nil {
+					walker.log.Error(err, "failed to delete repo for deleted subscription", "path", gitRepo.Name())
+					successRate--
+				}
+
+				continue
+			}
+
 			walker.log.Error(err, "failed to sync local git repo", "path", gitRepo.Name())
 			successRate--
 
@@ -128,7 +141,7 @@ func (walker *gitStorageWalker) syncGitRepos(ctx context.Context, forceReconcile
 			continue
 		}
 
-		if dbSyncer.SyncGitRepo(ctx, base64UserIdentity, base64UserGroup, repoFullPath, forceReconcile) {
+		if dbSyncer.SyncGitRepo(ctx, base64UserIdentity, base64UserGroup, repoFullPath, gitPath, forceReconcile) {
 			successRate++
 		}
 	}
@@ -137,10 +150,10 @@ func (walker *gitStorageWalker) syncGitRepos(ctx context.Context, forceReconcile
 }
 
 // getInfoFromSubscription opens a subscription CR and returns syncer tag (spec.placement.hubOfHubsGitOps),
-// base64(user-identity), base64(user-group) and error if failed.
+// gitpath annotation value, base64(user-identity), base64(user-group) and error if failed.
 func (walker *gitStorageWalker) getInfoFromSubscription(ctx context.Context,
 	subscriptionName string,
-) (string, string, string, error) {
+) (string, string, string, string, error) {
 	subscription := &appv1.Subscription{}
 	// try to get subscription
 	objKey := client.ObjectKey{
@@ -149,25 +162,28 @@ func (walker *gitStorageWalker) getInfoFromSubscription(ctx context.Context,
 	}
 	if err := walker.k8sClient.Get(ctx, objKey, subscription); err != nil {
 		if !apierrors.IsNotFound(err) {
-			return "", "", "", fmt.Errorf("subscription with name %s was not found - %w", subscriptionName, err)
+			return "", "", "", "", apierrors.NewNotFound(schema.GroupResource{Group: subscription.APIVersion},
+				subscriptionName)
 		}
 
-		return "", "", "", fmt.Errorf("failed to get subscription with name %s - %w", subscriptionName, err)
+		return "", "", "", "", fmt.Errorf("failed to get subscription with name %s - %w", subscriptionName, err)
 	}
+
+	gitPath := subscription.Annotations[appv1.AnnotationGitPath]
 
 	base64UserIdentity, found := subscription.Annotations[appv1.AnnotationUserIdentity]
 	if !found {
-		return "", "", "", errUserIdentityAnnotationNotFound
+		return "", "", "", "", errUserIdentityAnnotationNotFound
 	}
 
 	base64UserGroup, found := subscription.Annotations[appv1.AnnotationUserGroup]
 	if !found {
-		return "", "", "", errUserGroupAnnotationNotFound
+		return "", "", "", "", errUserGroupAnnotationNotFound
 	}
 
 	if subscription.Spec.Placement.HubOfHubsGitOps == nil { // shouldn't happen but just for safety
-		return "", "", "", errHubOfHubsGitopsPlacementNotFound
+		return "", "", "", "", errHubOfHubsGitopsPlacementNotFound
 	}
 
-	return *subscription.Spec.Placement.HubOfHubsGitOps, base64UserIdentity, base64UserGroup, nil
+	return *subscription.Spec.Placement.HubOfHubsGitOps, gitPath, base64UserIdentity, base64UserGroup, nil
 }
