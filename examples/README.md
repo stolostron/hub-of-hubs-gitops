@@ -6,6 +6,12 @@ In this example we're going to deploy subscriptions that sync nonk8s objects fou
 
 ---
 ## Deploy the Channel / Subscription resources:
+For k8s resources, subscription-admin permissions might be required, refer to
+[examples when Subscription Admin needs to be enabled in RHACM-Gitops scenarios](https://access.redhat.com/solutions/6010251).
+
+Note: the article states that policies cannot be deployed starting from ACM 2.4, BUT, the cluster-role permissions can be modified.
+
+Run:
 ```
 kubectl apply -f subscriptions
 ```
