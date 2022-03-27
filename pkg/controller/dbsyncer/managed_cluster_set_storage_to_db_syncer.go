@@ -5,11 +5,11 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-
 	set "github.com/deckarep/golang-set"
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/authorizer"
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/db"
 	yamltypes "github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/types"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -97,8 +97,8 @@ func (syncer *ManagedClusterSetStorageToDBSyncer) syncManagedClusterSet(ctx cont
 func (syncer *ManagedClusterSetStorageToDBSyncer) createCRAndAssignLabels(ctx context.Context,
 	managedClusterSet *yamltypes.ManagedClusterSet, hubToManagedClustersMap map[string]set.Set,
 ) error {
-	// update CR in cluster
-	if err := syncer.k8sClient.Create(ctx, managedClusterSet.GetCR()); err != nil {
+	// update CR in cluster - if already exists then it's ok
+	if err := syncer.k8sClient.Create(ctx, managedClusterSet.GetCR()); err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("failed to create ManagedClusterSet resource in cluster - %w", err)
 	}
 
