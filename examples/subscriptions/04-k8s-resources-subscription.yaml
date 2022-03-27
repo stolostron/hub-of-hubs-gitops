@@ -1,7 +1,7 @@
 apiVersion: apps.open-cluster-management.io/v1
 kind: Subscription
 metadata:
-  name: git-mcset-binding-native-subscription
+  name: git-hoh-k8s-native-subscription
   namespace: default
   annotations:
     apps.open-cluster-management.io/git-path: k8s-resources
