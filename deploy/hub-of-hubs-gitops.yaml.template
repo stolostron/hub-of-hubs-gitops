@@ -41,6 +41,16 @@ rules:
   - update
   - delete
 - apiGroups:
+  - "cluster.open-cluster-management.io"
+  resources:
+  - managedclustersets
+  - managedclusterbindings
+  verbs:
+  - get
+  - create
+  - update
+  - delete
+- apiGroups:
   - "apps.open-cluster-management.io"
   resources:
   - subscriptions
@@ -130,7 +140,7 @@ spec:
             - name: SYNC_INTERVAL
               value: 30s
           volumeMounts:
-            - readOnly: true
+            - readOnly: false
               mountPath: /opt/hub-of-hubs-subscription-storage
               name: hoh-gitops-pv
             - readOnly: true

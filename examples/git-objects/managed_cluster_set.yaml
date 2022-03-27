@@ -1,0 +1,11 @@
+kind: HubOfHubsManagedClusterSet # not a k8s resource, but the formatting is intentionally similar.
+metadata:
+  name: hoh-set
+spec:
+  identifiers: # can contain multiple hub-identifier entries
+    - hubIdentifier:
+        name: hub3 # hub name
+        managedClusterIdentifiers: # currently, MCs are identified by name.
+          - cluster8
+          - cluster9
+  # identified MCs will be labeled with cluster.open-cluster-management.io/clusterset={metadata.name}

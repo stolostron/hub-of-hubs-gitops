@@ -4,6 +4,7 @@ metadata:
   name: git-test-repo-subscription
   namespace: hoh-subscriptions
   annotations:
+    apps.open-cluster-management.io/git-path: managed-clusters-group
     apps.open-cluster-management.io/github-branch: main
 spec:
   channel: hoh-subscriptions/test-repo-git

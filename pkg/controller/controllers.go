@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	clusterv1beta1 "open-cluster-management.io/api/cluster/v1beta1"
+
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/authorizer"
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/controller/dbsyncer"
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/db"
@@ -14,13 +16,22 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const managedClustersSetStorageToDBSyncerTag = "ManagedClustersGroup"
+const (
+	managedClustersGroupStorageToDBSyncerTag = "ManagedClustersGroup"
+	managedClusterSetStorageToDBSyncerTag    = "HubOfHubsManagedClusterSet"
+	clusterApiGroupName                      = "cluster.open-cluster-management.io"
+	clusterApiGroupVersion                   = "v1alpha1"
+)
 
 // AddToScheme adds all Resources to the Scheme.
 func AddToScheme(runtimeScheme *runtime.Scheme) error {
-	// Setup Scheme for all resources
+	// Setup Scheme for all channel-subscription resources
 	if err := apis.AddToScheme(runtimeScheme); err != nil {
 		return fmt.Errorf("failed to add subscription apis to mgr scheme - %w", err)
+	}
+	// Setup Scheme for cluster/v1beta1
+	if err := clusterv1beta1.Install(runtimeScheme); err != nil {
+		return fmt.Errorf("failed to install cluster/v1beta1 scheme to mgr scheme - %w", err)
 	}
 
 	return nil
@@ -30,14 +41,16 @@ func AddToScheme(runtimeScheme *runtime.Scheme) error {
 func AddGitStorageWalker(mgr ctrl.Manager, gitStorageDirPath string, specDB db.SpecDB,
 	rbacAuthorizer authorizer.Authorizer, syncInterval time.Duration,
 ) error {
-	tagToSyncerMap := map[string]dbsyncer.StorageToDBSyncer{
-		managedClustersSetStorageToDBSyncerTag: dbsyncer.NewManagedClustersGroupStorageToDBSyncer(specDB,
-			rbacAuthorizer),
-	}
-
 	k8sClient, err := client.New(mgr.GetConfig(), client.Options{Scheme: mgr.GetScheme()})
 	if err != nil {
 		return fmt.Errorf("failed to start k8s client from mgr - %w", err)
+	}
+
+	tagToSyncerMap := map[string]dbsyncer.StorageToDBSyncer{
+		managedClustersGroupStorageToDBSyncerTag: dbsyncer.NewManagedClustersGroupStorageToDBSyncer(specDB,
+			rbacAuthorizer),
+		managedClusterSetStorageToDBSyncerTag: dbsyncer.NewManagedClusterSetStorageToDBSyncer(specDB,
+			k8sClient, rbacAuthorizer),
 	}
 
 	if err := mgr.Add(&gitStorageWalker{
