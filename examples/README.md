@@ -128,7 +128,7 @@ Custom resources can wrap k8s resources, such as:
 ```
 kind: HubOfHubsManagedClusterSet # not a k8s resource, but the formatting is intentionally similar.
 metadata:
-  name: hoh-set
+  name: hoh-set # will result in the deployment of a ManagedClusterSet (v1beta1) with this name
 spec:
   identifiers: # can contain multiple hub-identifier entries
     - hubIdentifier:
