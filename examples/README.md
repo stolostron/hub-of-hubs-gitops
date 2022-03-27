@@ -1,6 +1,6 @@
 # Examples
 In this example we're going to deploy subscriptions that sync nonk8s objects found in 
-[nonk8s-resources](examples/git-objects/nonk8s-resources) and k8s-native resources found in [nonk8s-resources](examples/git-objects/k8s-resources)
+[nonk8s-resources](git-objects/nonk8s-resources) and k8s-native resources found in [nonk8s-resources](git-objects/k8s-resources)
 
 #### Familiarity with ACM's Channel/Subscription logic is assumed.
 
@@ -104,8 +104,8 @@ spec:
 ```
 
 Additionally, they can be custom yamls representing nonk8s resources that specific hub-of-hubs-gitops processors can handle.
-Such resources can be found in [nonk8s-resources](examples/git-objects/k8s-resources) and their API is present in 
-[pkg/types](pkg/types).
+Such resources can be found in [nonk8s-resources](git-objects/k8s-resources) and their API is present in 
+[pkg/types](../pkg/types).
 
 For example:
 ```
