@@ -1,6 +1,0 @@
-kind: Index
-types: # map of processor tags to (multiple) dirs relative to the index's filepath.
-  - HubOfHubsManagedClusterSet:
-    - git-objects/nonk8s-resources/managed-cluster-set # dir
-  - ManagedClustersGroup:
-    - git-objects/nonk8s-resources/managed-clusters-group # dir

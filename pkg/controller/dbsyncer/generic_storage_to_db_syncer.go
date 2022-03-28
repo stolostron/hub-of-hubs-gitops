@@ -29,7 +29,7 @@ type genericStorageToDBSyncer struct {
 
 // SyncGitRepo operates on a local git repo to sync contained objects of managed-cluster-groups.
 func (syncer *genericStorageToDBSyncer) SyncGitRepo(ctx context.Context, base64UserIdentity string,
-	base64UserGroup string, gitRepoFullPath string, workPath string, dirs []string, forceReconcile bool,
+	base64UserGroup string, gitRepoFullPath string, workPath string, forceReconcile bool,
 ) bool {
 	repo, err := git.PlainOpen(gitRepoFullPath)
 	if err != nil {
@@ -60,9 +60,11 @@ func (syncer *genericStorageToDBSyncer) SyncGitRepo(ctx context.Context, base64U
 		return false // no updates
 	}
 
-	if syncer.walkGitRepo(ctx, base64UserIdentity, base64UserGroup, filepath.Join(gitRepoFullPath, workPath),
-		dirs) {
-		// all succeeded
+	if workPath != "" {
+		workPath = filepath.Join(gitRepoFullPath, workPath)
+	}
+
+	if syncer.walkGitRepo(ctx, base64UserIdentity, base64UserGroup, workPath) { // all succeeded
 		syncer.gitRepoToCommitMap[gitRepoFullPath] = commit.ID().String()
 		syncer.log.Info("synced repo", "root", gitRepoFullPath, "commit", commit.ID().String())
 
@@ -73,50 +75,47 @@ func (syncer *genericStorageToDBSyncer) SyncGitRepo(ctx context.Context, base64U
 }
 
 func (syncer *genericStorageToDBSyncer) walkGitRepo(ctx context.Context, base64UserIdentity string,
-	base64UserGroup string, fullWorkPath string, dirs []string,
+	base64UserGroup string, gitRepoFullPath string,
 ) bool {
 	successRate := 0
 
-	for _, dir := range dirs {
-		workDir := filepath.Join(fullWorkPath, dir)
-		_ = filepath.WalkDir(workDir, func(path string, dirEntry fs.DirEntry, err error) error {
-			if err != nil {
-				syncer.log.Error(err, "walkdir failed", "filepath", path)
-				return nil
-			}
-
-			if dirEntry.IsDir() || filepath.Dir(path) != workDir {
-				return nil // for now supporting first depth only
-			}
-
-			successRate-- // all function's failure exit paths will not undo this
-
-			// open file for read
-			file, err := os.Open(path)
-			if err != nil {
-				syncer.log.Error(err, "failed to open file in local git repo", "filepath", path)
-				return nil
-			}
-
-			// buffer for file
-			buf := bytes.NewBuffer(nil)
-			// copy bytes into buffer
-			if _, err := io.Copy(buf, file); err != nil {
-				syncer.log.Error(err, "failed to copy file bytes in local git repo", "filepath", path)
-				return nil
-			}
-
-			if err := syncer.syncGitResourceFunc(ctx, base64UserIdentity, base64UserGroup,
-				buf); err != nil {
-				syncer.log.Error(err, "failed to sync git resource in local git repo", "filepath", path)
-				return nil
-			}
-
-			successRate++ // succeeded
-
+	_ = filepath.WalkDir(gitRepoFullPath, func(path string, dirEntry fs.DirEntry, err error) error {
+		if err != nil {
+			syncer.log.Error(err, "walkdir failed", "filepath", path)
 			return nil
-		})
-	}
+		}
+
+		if dirEntry.IsDir() || filepath.Dir(path) != gitRepoFullPath {
+			return nil // for now supporting first depth only
+		}
+
+		successRate-- // all function's failure exit paths will not undo this
+
+		// open file for read
+		file, err := os.Open(path)
+		if err != nil {
+			syncer.log.Error(err, "failed to open file in local git repo", "filepath", path)
+			return nil
+		}
+
+		// buffer for file
+		buf := bytes.NewBuffer(nil)
+		// copy bytes into buffer
+		if _, err := io.Copy(buf, file); err != nil {
+			syncer.log.Error(err, "failed to copy file bytes in local git repo", "filepath", path)
+			return nil
+		}
+
+		if err := syncer.syncGitResourceFunc(ctx, base64UserIdentity, base64UserGroup,
+			buf); err != nil {
+			syncer.log.Error(err, "failed to sync git resource in local git repo", "filepath", path)
+			return nil
+		}
+
+		successRate++ // succeeded
+
+		return nil
+	})
 
 	return successRate == 0 // all succeeded
 }
