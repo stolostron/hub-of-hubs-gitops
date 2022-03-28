@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	clusterv1beta1 "open-cluster-management.io/api/cluster/v1beta1"
-
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/authorizer"
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/controller/dbsyncer"
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/db"
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/intervalpolicy"
 	"k8s.io/apimachinery/pkg/runtime"
+	clusterv1beta1 "open-cluster-management.io/api/cluster/v1beta1"
 	"open-cluster-management.io/multicloud-operators-subscription/pkg/apis"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -19,8 +18,6 @@ import (
 const (
 	managedClustersGroupStorageToDBSyncerTag = "ManagedClustersGroup"
 	managedClusterSetStorageToDBSyncerTag    = "HubOfHubsManagedClusterSet"
-	clusterApiGroupName                      = "cluster.open-cluster-management.io"
-	clusterApiGroupVersion                   = "v1alpha1"
 )
 
 // AddToScheme adds all Resources to the Scheme.

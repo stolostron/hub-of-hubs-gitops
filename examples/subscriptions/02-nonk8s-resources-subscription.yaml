@@ -4,11 +4,12 @@ metadata:
   name: hoh-gitops-mcgroup-subscription
   namespace: hoh-subscriptions
   annotations:
-    apps.open-cluster-management.io/git-path: examples/git-objects/nonk8s-resources/managed-clusters-group
-    apps.open-cluster-management.io/github-branch: main
+    # apps.open-cluster-management.io/git-path: examples
+    apps.open-cluster-management.io/github-branch: test
 spec:
   channel: hoh-subscriptions/hoh-gitops
   name: hub-of-hubs-gitops
   placement:
     local: true
-    hubOfHubsGitOps: ManagedClustersGroup
+    hubOfHubsGitOps: examples/index.yaml # directory could be specified in git-path or here
+    # files in index are processed relative to its path

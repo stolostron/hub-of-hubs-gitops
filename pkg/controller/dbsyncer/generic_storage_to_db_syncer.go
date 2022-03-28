@@ -7,7 +7,9 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 
+	set "github.com/deckarep/golang-set"
 	"github.com/go-logr/logr"
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/authorizer"
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/db"
@@ -29,7 +31,7 @@ type genericStorageToDBSyncer struct {
 
 // SyncGitRepo operates on a local git repo to sync contained objects of managed-cluster-groups.
 func (syncer *genericStorageToDBSyncer) SyncGitRepo(ctx context.Context, base64UserIdentity string,
-	base64UserGroup string, gitRepoFullPath string, workPath string, forceReconcile bool,
+	base64UserGroup string, gitRepoFullPath string, workPath string, files []string, forceReconcile bool,
 ) bool {
 	repo, err := git.PlainOpen(gitRepoFullPath)
 	if err != nil {
@@ -60,11 +62,9 @@ func (syncer *genericStorageToDBSyncer) SyncGitRepo(ctx context.Context, base64U
 		return false // no updates
 	}
 
-	if workPath != "" {
-		workPath = filepath.Join(gitRepoFullPath, workPath)
-	}
-
-	if syncer.walkGitRepo(ctx, base64UserIdentity, base64UserGroup, workPath) { // all succeeded
+	if syncer.walkGitRepo(ctx, base64UserIdentity, base64UserGroup, filepath.Join(gitRepoFullPath, workPath),
+		createSetFromSlice(files)) {
+		// all succeeded
 		syncer.gitRepoToCommitMap[gitRepoFullPath] = commit.ID().String()
 		syncer.log.Info("synced repo", "root", gitRepoFullPath, "commit", commit.ID().String())
 
@@ -75,18 +75,22 @@ func (syncer *genericStorageToDBSyncer) SyncGitRepo(ctx context.Context, base64U
 }
 
 func (syncer *genericStorageToDBSyncer) walkGitRepo(ctx context.Context, base64UserIdentity string,
-	base64UserGroup string, gitRepoFullPath string,
+	base64UserGroup string, fullWorkPath string, files set.Set,
 ) bool {
 	successRate := 0
 
-	_ = filepath.WalkDir(gitRepoFullPath, func(path string, dirEntry fs.DirEntry, err error) error {
+	_ = filepath.WalkDir(fullWorkPath, func(path string, dirEntry fs.DirEntry, err error) error {
 		if err != nil {
 			syncer.log.Error(err, "walkdir failed", "filepath", path)
 			return nil
 		}
 
-		if dirEntry.IsDir() || filepath.Dir(path) != gitRepoFullPath {
+		if dirEntry.IsDir() || filepath.Dir(path) != fullWorkPath {
 			return nil // for now supporting first depth only
+		}
+
+		if !syncer.shouldHandleSubFile(fullWorkPath, path, files) {
+			return nil
 		}
 
 		successRate-- // all function's failure exit paths will not undo this
@@ -118,4 +122,11 @@ func (syncer *genericStorageToDBSyncer) walkGitRepo(ctx context.Context, base64U
 	})
 
 	return successRate == 0 // all succeeded
+}
+
+func (syncer *genericStorageToDBSyncer) shouldHandleSubFile(basePath string, filePath string,
+	filesToHandle set.Set) bool {
+	relativeFilePath := filePath[len(basePath):]
+	// must be of length > 0 since path is legal
+	return filesToHandle.Contains(strings.Split(relativeFilePath, string(os.PathSeparator)))
 }
