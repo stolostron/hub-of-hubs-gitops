@@ -2,9 +2,9 @@ package yamltypes
 
 import (
 	"fmt"
-	clusterv1beta1 "open-cluster-management.io/api/cluster/v1beta1"
 
 	"gopkg.in/yaml.v2"
+	clusterv1beta1 "open-cluster-management.io/api/cluster/v1beta1"
 	controllerruntime "sigs.k8s.io/controller-runtime"
 )
 

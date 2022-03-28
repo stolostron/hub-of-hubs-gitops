@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -11,6 +13,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/controller/dbsyncer"
 	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/intervalpolicy"
+	yamltypes "github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/types"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	appv1 "open-cluster-management.io/multicloud-operators-subscription/pkg/apis/apps/v1"
@@ -97,6 +100,7 @@ func (walker *gitStorageWalker) periodicSync(ctx context.Context) {
 	}
 }
 
+//nolint
 func (walker *gitStorageWalker) syncGitRepos(ctx context.Context, forceReconcile bool) bool {
 	gitRepos, err := ioutil.ReadDir(walker.rootDirPath)
 	if err != nil {
@@ -113,7 +117,7 @@ func (walker *gitStorageWalker) syncGitRepos(ctx context.Context, forceReconcile
 
 		repoFullPath := filepath.Join(walker.rootDirPath, gitRepo.Name())
 
-		syncerTag, gitPath, base64UserIdentity, base64UserGroup,
+		indexPath, gitPath, base64UserIdentity, base64UserGroup,
 			err := walker.getInfoFromSubscription(ctx, gitRepo.Name())
 		if err != nil {
 			if apierrors.IsNotFound(err) {
@@ -132,17 +136,30 @@ func (walker *gitStorageWalker) syncGitRepos(ctx context.Context, forceReconcile
 			continue
 		}
 
-		dbSyncer, found := walker.tagToSyncerMap[syncerTag]
-		if !found {
-			walker.log.Error(errSyncerTagNotFound, "failed to sync local git repo", "path", gitRepo.Name(),
-				"walker-tag", syncerTag)
-			successRate--
+		typesToDirs, err := walker.processIndex(filepath.Join(repoFullPath, gitPath, indexPath))
+		if err != nil {
+			walker.log.Error(err, "failed to open index file", "path", gitRepo.Name(), "index", filepath.Join(gitPath,
+				indexPath))
 
-			continue
+			return false
 		}
 
-		if dbSyncer.SyncGitRepo(ctx, base64UserIdentity, base64UserGroup, repoFullPath, gitPath, forceReconcile) {
-			successRate++
+		for _, typeToFiles := range typesToDirs {
+			for syncerTag, dirs := range typeToFiles {
+				dbSyncer, found := walker.tagToSyncerMap[syncerTag]
+				if !found {
+					walker.log.Error(errSyncerTagNotFound, "failed to sync local git repo", "path", gitRepo.Name(),
+						"walker-tag", syncerTag)
+					successRate--
+
+					continue
+				}
+
+				if dbSyncer.SyncGitRepo(ctx, base64UserIdentity, base64UserGroup, repoFullPath,
+					filepath.Dir(filepath.Join(gitPath, indexPath)), dirs, forceReconcile) {
+					successRate++
+				}
+			}
 		}
 	}
 
@@ -186,4 +203,24 @@ func (walker *gitStorageWalker) getInfoFromSubscription(ctx context.Context,
 	}
 
 	return *subscription.Spec.Placement.HubOfHubsGitOps, gitPath, base64UserIdentity, base64UserGroup, nil
+}
+
+func (walker *gitStorageWalker) processIndex(indexFullPath string) ([]map[string][]string, error) {
+	file, err := os.Open(indexFullPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open index file - %w", err)
+	}
+	// buffer for file
+	buf := bytes.NewBuffer(nil)
+	// copy bytes into buffer
+	if _, err := io.Copy(buf, file); err != nil {
+		return nil, fmt.Errorf("failed to copy index file bytes - %w", err)
+	}
+
+	index, err := yamltypes.NewIndex(buf.Bytes())
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Index from bytes - %w", err)
+	}
+
+	return index.TypeToDirs, nil
 }
