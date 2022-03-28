@@ -49,8 +49,8 @@ spec:
     local: true
 ```
 #### non-k8s resources using modified subscriptions:
-The customized Subscription is extended with `spec.placement.hubOfHubsGitOps` field to hold the type of a resource processor.
-Note that this sets the file-type for **all** the files present in the repository/git-path handled by the subscription.
+The customized Subscription is extended with `spec.placement.hubOfHubsGitOps` field to hold the path to an index file.
+The index file is `{repo-path}/{annotations.git-path}/{spec.placement.hubOfHubsGitOps}`.
 
 The `spec.placement.local` field has to be set to true when the above field is set, otherwise the Subscription will be ignored.
 
@@ -61,32 +61,29 @@ metadata:
   name: hoh-gitops-mcgroup-subscription
   namespace: hoh-subscriptions
   annotations:
-    apps.open-cluster-management.io/git-path: examples/git-objects/nonk8s-resources/managed-clusters-group
+    # apps.open-cluster-management.io/git-path: examples
     apps.open-cluster-management.io/github-branch: main
 spec:
   channel: hoh-subscriptions/hoh-gitops
   name: hub-of-hubs-gitops
   placement:
     local: true
-    hubOfHubsGitOps: ManagedClustersGroup
-```
-```
-apiVersion: apps.open-cluster-management.io/v1
-kind: Subscription
-metadata:
-  name: hoh-gitops-mcset-subscription
-  namespace: hoh-subscriptions
-  annotations:
-    apps.open-cluster-management.io/git-path: examples/git-objects/nonk8s-resources/managed-cluster-set
-    apps.open-cluster-management.io/github-branch: main
-spec:
-  channel: hoh-subscriptions/hoh-gitops
-  name: hub-of-hubs-gitops
-  placement:
-    local: true
-    hubOfHubsGitOps: HubOfHubsManagedClusterSet
+    hubOfHubsGitOps: examples/index.yaml # directory could be specified in git-path or here
+    # files in index are processed relative to its path
 ```
 ---
+## Index File
+The index file can be placed anywhere and called anything.
+The index file maps processor-tags to work-directories relative to its location.
+```
+kind: Index
+types: # map of processor tags to (multiple) dirs relative to the index's filepath.
+  - HubOfHubsManagedClusterSet:
+    - git-objects/nonk8s-resources/managed-cluster-set # dir
+  - ManagedClustersGroup:
+    - git-objects/nonk8s-resources/managed-clusters-group # dir
+```
+
 ## Git Objects
 Git objects can be k8s resources that are pulled and applied to the cluster via regular subscriptions, e.g.:
 ```
