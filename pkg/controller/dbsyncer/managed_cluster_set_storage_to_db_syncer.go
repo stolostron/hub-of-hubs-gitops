@@ -23,7 +23,7 @@ func NewManagedClusterSetStorageToDBSyncer(specDB db.SpecDB, k8sClient client.Cl
 ) *ManagedClusterSetStorageToDBSyncer {
 	syncer := &ManagedClusterSetStorageToDBSyncer{
 		genericStorageToDBSyncer: &genericStorageToDBSyncer{
-			log:                ctrl.Log.WithName("managed-clusters-group-storage-to-db-syncer"),
+			log:                ctrl.Log.WithName("managed-cluster-set-storage-to-db-syncer"),
 			db:                 specDB,
 			authorizer:         rbacAuthorizer,
 			dbTableName:        managedClusterLabelsDBTableName,

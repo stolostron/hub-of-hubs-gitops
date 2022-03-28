@@ -19,5 +19,5 @@ func NewIndex(data []byte) (*Index, error) {
 
 // Index maps other types to files for the git-walker to distributed to processors.
 type Index struct {
-	TypeToFiles []map[string][]string `yaml:"types"`
+	TypeToDirs []map[string][]string `yaml:"types"`
 }

@@ -5,7 +5,7 @@ metadata:
   namespace: hoh-subscriptions
   annotations:
     # apps.open-cluster-management.io/git-path: examples
-    apps.open-cluster-management.io/github-branch: test
+    apps.open-cluster-management.io/github-branch: main
 spec:
   channel: hoh-subscriptions/hoh-gitops
   name: hub-of-hubs-gitops

@@ -136,7 +136,7 @@ func (walker *gitStorageWalker) syncGitRepos(ctx context.Context, forceReconcile
 			continue
 		}
 
-		typesToFiles, err := walker.processIndex(filepath.Join(repoFullPath, gitPath, indexPath))
+		typesToDirs, err := walker.processIndex(filepath.Join(repoFullPath, gitPath, indexPath))
 		if err != nil {
 			walker.log.Error(err, "failed to open index file", "path", gitRepo.Name(), "index", filepath.Join(gitPath,
 				indexPath))
@@ -144,8 +144,8 @@ func (walker *gitStorageWalker) syncGitRepos(ctx context.Context, forceReconcile
 			return false
 		}
 
-		for _, typeToFiles := range typesToFiles {
-			for syncerTag, files := range typeToFiles {
+		for _, typeToFiles := range typesToDirs {
+			for syncerTag, dirs := range typeToFiles {
 				dbSyncer, found := walker.tagToSyncerMap[syncerTag]
 				if !found {
 					walker.log.Error(errSyncerTagNotFound, "failed to sync local git repo", "path", gitRepo.Name(),
@@ -156,7 +156,7 @@ func (walker *gitStorageWalker) syncGitRepos(ctx context.Context, forceReconcile
 				}
 
 				if dbSyncer.SyncGitRepo(ctx, base64UserIdentity, base64UserGroup, repoFullPath,
-					filepath.Dir(filepath.Join(gitPath, indexPath)), files, forceReconcile) {
+					filepath.Dir(filepath.Join(gitPath, indexPath)), dirs, forceReconcile) {
 					successRate++
 				}
 			}
@@ -222,5 +222,5 @@ func (walker *gitStorageWalker) processIndex(indexFullPath string) ([]map[string
 		return nil, fmt.Errorf("failed to create Index from bytes - %w", err)
 	}
 
-	return index.TypeToFiles, nil
+	return index.TypeToDirs, nil
 }
