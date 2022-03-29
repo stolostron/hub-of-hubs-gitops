@@ -11,5 +11,5 @@ spec:
   channel: hoh-subscriptions/hoh-gitops
   name: hub-of-hubs-gitops
   placement:
-    local: true
     hubOfHubsGitOps: HubOfHubsManagedClusterSet
+    local: true

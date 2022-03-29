@@ -71,8 +71,8 @@ spec:
   channel: hoh-subscriptions/hoh-gitops
   name: hub-of-hubs-gitops
   placement:
+    hubOfHubsGitOps: HubOfHubsManagedClusterSet
     local: true
-    hubOfHubsGitOps: ManagedClustersGroup
 ```
 ```
 apiVersion: apps.open-cluster-management.io/v1
@@ -88,8 +88,8 @@ spec:
   channel: hoh-subscriptions/hoh-gitops
   name: hub-of-hubs-gitops
   placement:
+    hubOfHubsGitOps: HubOfHubsManagedClusterSet  
     local: true
-    hubOfHubsGitOps: HubOfHubsManagedClusterSet
 ```
 ---
 ## Git Objects
