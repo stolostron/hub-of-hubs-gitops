@@ -42,7 +42,7 @@ that claims it to your hub of hubs cluster:
 #### Deploying the modified Subscription CRD
     kubectl -n open-cluster-management apply -f deploy/customized-subscriptions-operator/apps.open-cluster-management.io_subscriptions_crd_v1.yaml
 
-#### Creating the namespace for accessible Subscription CRs
+#### Creating the namespace to easily track custom Subscription CRs (used in [examples](examples))
     kubectl create namespace hoh-subscriptions
 
 #### Deploying the modified operator
