@@ -3,7 +3,7 @@ kind: Channel
 metadata:
   name: hoh-gitops
   namespace: hoh-subscriptions
-  annotation:
+  annotations:
     hub-of-hubs.open-cluster-management.io/local-resource: ""
 spec:
     type: Git
