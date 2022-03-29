@@ -26,6 +26,8 @@ kind: Channel
 metadata:
   name: hoh-gitops
   namespace: hoh-subscriptions
+  annotation:
+    hub-of-hubs.open-cluster-management.io/local-resource: ""
 spec:
     type: Git
     pathname: https://github.com/stolostron/hub-of-hubs-gitops
@@ -42,6 +44,7 @@ metadata:
   annotations:
     apps.open-cluster-management.io/git-path: examples/git-objects/k8s-resources
     apps.open-cluster-management.io/github-branch: main
+    hub-of-hubs.open-cluster-management.io/local-resource: ""
 spec:
   channel: hoh-subscriptions/hoh-gitops
   name: hub-of-hubs-gitops
@@ -63,6 +66,7 @@ metadata:
   annotations:
     apps.open-cluster-management.io/git-path: examples/git-objects/nonk8s-resources/managed-clusters-group
     apps.open-cluster-management.io/github-branch: main
+    hub-of-hubs.open-cluster-management.io/local-resource: ""
 spec:
   channel: hoh-subscriptions/hoh-gitops
   name: hub-of-hubs-gitops
@@ -79,6 +83,7 @@ metadata:
   annotations:
     apps.open-cluster-management.io/git-path: examples/git-objects/nonk8s-resources/managed-cluster-set
     apps.open-cluster-management.io/github-branch: main
+    hub-of-hubs.open-cluster-management.io/local-resource: ""
 spec:
   channel: hoh-subscriptions/hoh-gitops
   name: hub-of-hubs-gitops

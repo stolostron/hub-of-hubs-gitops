@@ -3,6 +3,8 @@ kind: Channel
 metadata:
   name: hoh-gitops
   namespace: hoh-subscriptions
+  annotation:
+    hub-of-hubs.open-cluster-management.io/local-resource: ""
 spec:
     type: Git
     pathname: https://github.com/stolostron/hub-of-hubs-gitops
