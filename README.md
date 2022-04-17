@@ -20,8 +20,10 @@ where the subscriptions-operator is responsible for syncing Git objects via the 
 while the HOH GitOps component watches the files and processes them to provide support for customized gitops / non-k8s gitops.
 
 Disclaimers: 
-* The component was implemented to demonstrate the mechanism. It is not tested for scale and can use 
-optimizations such as parallelized storage-walking / parallelized DB job handling.
+* The component was implemented to **demonstrate** the mechanism. It is not fully implemented and is not tested for scale:
+  * Syncers should support un-deploying non-k8s resources upon deleting a subscription (e.g., when a repo is found but its subscription is not).
+  * Supported non-k8s resource implementations should be completed (currently only supports "INSERT" but not update/delete).
+  * Optimizations such as parallelized storage-walking / parallelized & batched DB job handling can be applied.
 
 ## Prerequisites
 ### Deploying the Shared Volume
@@ -42,7 +44,7 @@ that claims it to your hub of hubs cluster:
 #### Deploying the modified Subscription CRD
     kubectl -n open-cluster-management apply -f deploy/customized-subscriptions-operator/apps.open-cluster-management.io_subscriptions_crd_v1.yaml
 
-#### Creating the namespace to easily track custom Subscription CRs (used in [examples](examples))
+#### Creating the namespace for accessible Subscription CRs
     kubectl create namespace hoh-subscriptions
 
 #### Deploying the modified operator
