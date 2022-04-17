@@ -20,29 +20,19 @@ const (
 // NewManagedClustersGroupStorageToDBSyncer returns a new instance of ManagedClustersGroupStorageToDBSyncer.
 func NewManagedClustersGroupStorageToDBSyncer(specDB db.SpecDB,
 	rbacAuthorizer authorizer.Authorizer,
-) *ManagedClustersGroupStorageToDBSyncer {
-	syncer := &ManagedClustersGroupStorageToDBSyncer{
-		genericStorageToDBSyncer: &genericStorageToDBSyncer{
-			log:                ctrl.Log.WithName("managed-clusters-group-storage-to-db-syncer"),
-			db:                 specDB,
-			authorizer:         rbacAuthorizer,
-			dbTableName:        managedClusterLabelsDBTableName,
-			gitRepoToCommitMap: make(map[string]string),
+) StorageToDBSyncer {
+	return &genericStorageToDBSyncer{
+		log:                ctrl.Log.WithName("managed-clusters-group-storage-to-db-syncer"),
+		gitRepoToCommitMap: make(map[string]string),
+		syncGitResourceFunc: func(ctx context.Context, base64UserID string, base64UserGroup string,
+			buf *bytes.Buffer) error {
+			return syncManagedClustersGroup(ctx, specDB, rbacAuthorizer, base64UserID, base64UserGroup, buf)
 		},
 	}
-
-	syncer.syncGitResourceFunc = syncer.syncManagedClustersGroup
-
-	return syncer
 }
 
-// ManagedClustersGroupStorageToDBSyncer handles syncing managed-clusters-group from git storage.
-type ManagedClustersGroupStorageToDBSyncer struct {
-	*genericStorageToDBSyncer
-}
-
-func (syncer *ManagedClustersGroupStorageToDBSyncer) syncManagedClustersGroup(ctx context.Context, base64UserID string,
-	base64UserGroup string, buf *bytes.Buffer,
+func syncManagedClustersGroup(ctx context.Context, specDB db.SpecDB, authorizer authorizer.Authorizer,
+	base64UserID string, base64UserGroup string, buf *bytes.Buffer,
 ) error {
 	managedClustersGroup, err := yamltypes.NewManagedClustersGroupFromBytes(buf.Bytes())
 	if err != nil {
@@ -61,13 +51,11 @@ func (syncer *ManagedClustersGroupStorageToDBSyncer) syncManagedClustersGroup(ct
 	for _, identifier := range managedClustersGroup.Spec.Identifiers {
 		for _, hubIdentifier := range identifier {
 			hubToManagedClustersMap[hubIdentifier.Name] = createSetFromSlice(hubIdentifier.ManagedClusterIDs)
-			syncer.log.Info("found identifier in request", "user", userID, "group", userGroup,
-				"hub", hubIdentifier.Name, "clusters", hubToManagedClustersMap[hubIdentifier.Name].String())
 		}
 	}
 
 	// get unauthorized managed clusters for subscribed user
-	unauthorizedHubToManagedClustersMap, err := syncer.authorizer.FilterManagedClustersForUser(ctx, string(userID),
+	unauthorizedHubToManagedClustersMap, err := authorizer.FilterManagedClustersForUser(ctx, string(userID),
 		[]string{string(userGroup)}, hubToManagedClustersMap)
 	if err != nil {
 		return fmt.Errorf("failed to filter by authorization - %w", err)
@@ -79,9 +67,6 @@ func (syncer *ManagedClustersGroupStorageToDBSyncer) syncManagedClustersGroup(ct
 				continue // means all good
 			}
 
-			syncer.log.Info("unauthorized entry found in request (removed)", "hub", hubName,
-				"clusters", clustersSet.String())
-
 			hubToManagedClustersMap[hubName] = hubToManagedClustersMap[hubName].Difference(clustersSet) // remove them
 			if len(hubToManagedClustersMap[hubName].ToSlice()) == 0 {
 				delete(hubToManagedClustersMap, hubName)
@@ -89,9 +74,7 @@ func (syncer *ManagedClustersGroupStorageToDBSyncer) syncManagedClustersGroup(ct
 		}
 	}
 
-	syncer.log.Info("updating managed cluster labels", "label", labelKey, "value", managedClustersGroup.Spec.TagValue)
-
-	if err := syncer.db.UpdateLabelForManagedClusters(ctx, managedClusterLabelsDBTableName, labelKey,
+	if err := specDB.UpdateLabelForManagedClusters(ctx, managedClusterLabelsDBTableName, labelKey,
 		managedClustersGroup.Spec.TagValue, hubToManagedClustersMap); err != nil {
 		return fmt.Errorf("failed to update managed clusters group - %w", err)
 	}

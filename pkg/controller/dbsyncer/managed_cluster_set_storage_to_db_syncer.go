@@ -20,31 +20,19 @@ const managedClusterSetLabelKey = "cluster.open-cluster-management.io/clusterset
 // NewManagedClusterSetStorageToDBSyncer returns a new instance of ManagedClusterSetStorageToDBSyncer.
 func NewManagedClusterSetStorageToDBSyncer(specDB db.SpecDB, k8sClient client.Client,
 	rbacAuthorizer authorizer.Authorizer,
-) *ManagedClusterSetStorageToDBSyncer {
-	syncer := &ManagedClusterSetStorageToDBSyncer{
-		genericStorageToDBSyncer: &genericStorageToDBSyncer{
-			log:                ctrl.Log.WithName("managed-cluster-set-storage-to-db-syncer"),
-			db:                 specDB,
-			authorizer:         rbacAuthorizer,
-			dbTableName:        managedClusterLabelsDBTableName,
-			gitRepoToCommitMap: make(map[string]string),
+) StorageToDBSyncer {
+	return &genericStorageToDBSyncer{
+		log:                ctrl.Log.WithName("managed-cluster-set-storage-to-db-syncer"),
+		gitRepoToCommitMap: make(map[string]string),
+		syncGitResourceFunc: func(ctx context.Context, base64UserID string, base64UserGroup string,
+			buf *bytes.Buffer) error {
+			return syncManagedClusterSet(ctx, k8sClient, specDB, rbacAuthorizer, base64UserID, base64UserGroup, buf)
 		},
-		k8sClient: k8sClient,
 	}
-
-	syncer.syncGitResourceFunc = syncer.syncManagedClusterSet
-
-	return syncer
 }
 
-// ManagedClusterSetStorageToDBSyncer handles syncing managed-clusters-set from git storage.
-type ManagedClusterSetStorageToDBSyncer struct {
-	*genericStorageToDBSyncer
-	k8sClient client.Client
-}
-
-func (syncer *ManagedClusterSetStorageToDBSyncer) syncManagedClusterSet(ctx context.Context, base64UserID string,
-	base64UserGroup string, buf *bytes.Buffer,
+func syncManagedClusterSet(ctx context.Context, k8sClient client.Client, specDB db.SpecDB,
+	authorizer authorizer.Authorizer, base64UserID string, base64UserGroup string, buf *bytes.Buffer,
 ) error {
 	managedClusterSet, err := yamltypes.NewManagedClusterSetFromBytes(buf.Bytes())
 	if err != nil {
@@ -60,13 +48,11 @@ func (syncer *ManagedClusterSetStorageToDBSyncer) syncManagedClusterSet(ctx cont
 	for _, identifier := range managedClusterSet.Spec.Identifiers {
 		for _, hubIdentifier := range identifier {
 			hubToManagedClustersMap[hubIdentifier.Name] = createSetFromSlice(hubIdentifier.ManagedClusterIDs)
-			syncer.log.Info("found identifier in request", "user", userID, "group", userGroup,
-				"hub", hubIdentifier.Name, "clusters", hubToManagedClustersMap[hubIdentifier.Name].String())
 		}
 	}
 
 	// get unauthorized managed clusters for subscribed user
-	unauthorizedHubToManagedClustersMap, err := syncer.authorizer.FilterManagedClustersForUser(ctx, string(userID),
+	unauthorizedHubToManagedClustersMap, err := authorizer.FilterManagedClustersForUser(ctx, string(userID),
 		[]string{string(userGroup)}, hubToManagedClustersMap)
 	if err != nil {
 		return fmt.Errorf("failed to filter by authorization - %w", err)
@@ -78,9 +64,6 @@ func (syncer *ManagedClusterSetStorageToDBSyncer) syncManagedClusterSet(ctx cont
 				continue // means all good
 			}
 
-			syncer.log.Info("unauthorized entry found in request (removed)", "hub", hubName,
-				"clusters", clustersSet.String())
-
 			hubToManagedClustersMap[hubName] = hubToManagedClustersMap[hubName].Difference(clustersSet) // remove them
 			if len(hubToManagedClustersMap[hubName].ToSlice()) == 0 {
 				delete(hubToManagedClustersMap, hubName)
@@ -88,25 +71,22 @@ func (syncer *ManagedClusterSetStorageToDBSyncer) syncManagedClusterSet(ctx cont
 		}
 	}
 
-	if err := syncer.createCRAndAssignLabels(ctx, managedClusterSet, hubToManagedClustersMap); err != nil {
+	if err := createCRAndAssignLabels(ctx, k8sClient, specDB, managedClusterSet, hubToManagedClustersMap); err != nil {
 		return fmt.Errorf("failed to create managed cluster set - %w", err)
 	}
 
 	return nil
 }
 
-func (syncer *ManagedClusterSetStorageToDBSyncer) createCRAndAssignLabels(ctx context.Context,
+func createCRAndAssignLabels(ctx context.Context, k8sClient client.Client, specDB db.SpecDB,
 	managedClusterSet *yamltypes.ManagedClusterSet, hubToManagedClustersMap map[string]set.Set,
 ) error {
 	// update CR in cluster - if already exists then it's ok
-	if err := syncer.k8sClient.Create(ctx, managedClusterSet.GetCR()); err != nil && !apierrors.IsAlreadyExists(err) {
+	if err := k8sClient.Create(ctx, managedClusterSet.GetCR()); err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("failed to create ManagedClusterSet resource in cluster - %w", err)
 	}
 
-	syncer.log.Info("updating managed cluster labels", "label", managedClusterSetLabelKey,
-		"value", managedClusterSet.Metadata.Name)
-
-	if err := syncer.db.UpdateLabelForManagedClusters(ctx, managedClusterLabelsDBTableName, managedClusterSetLabelKey,
+	if err := specDB.UpdateLabelForManagedClusters(ctx, managedClusterLabelsDBTableName, managedClusterSetLabelKey,
 		managedClusterSet.Metadata.Name, hubToManagedClustersMap); err != nil {
 		return fmt.Errorf("failed to update managed clusters group - %w", err)
 	}

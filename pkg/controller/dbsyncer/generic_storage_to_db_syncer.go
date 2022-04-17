@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 
 	"github.com/go-logr/logr"
-	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/authorizer"
-	"github.com/stolostron/hub-of-hubs-nonk8s-gitops/pkg/db"
 	"gopkg.in/src-d/go-git.v4"
 )
 
@@ -20,9 +18,6 @@ type syncGitResourceFunc func(ctx context.Context, base64UserID string, base64Us
 // genericStorageToDBSyncer generalizes the handling of git storage repos.
 type genericStorageToDBSyncer struct {
 	log                 logr.Logger
-	db                  db.SpecDB
-	authorizer          authorizer.Authorizer
-	dbTableName         string
 	gitRepoToCommitMap  map[string]string
 	syncGitResourceFunc syncGitResourceFunc
 }
